@@ -21,6 +21,18 @@ Server Hostinger PHP-nya **8.3.30**, tapi laptop dev pakai **PHP 8.5.6** — ini
 
 `public/build` (hasil `npm run build`) sengaja di-commit ke git (dihapus dari `.gitignore`) karena server Hostinger cuma perlu PHP+Composer, TIDAK perlu install Node.js — build asset dilakukan di laptop sebelum push, bukan di server.
 
+### Bug MIME type `.js` (ditemukan & diperbaiki)
+
+Server Apache/LiteSpeed Hostinger awalnya ngirim file `.js` dengan `Content-Type: application/x-javascript` (legacy), bukan `text/javascript` — browser modern nolak eksekusi `<script type="module">` kalau MIME type-nya bukan yang standar. Fix: tambah `AddType text/javascript .js` + `<FilesMatch>` `ForceType` di `public/.htaccess` (di luar `<IfModule mod_mime.c>` karena LiteSpeed kadang nggak ngenalin nama module Apache itu, jadi `IfModule` block-nya ke-skip diam-diam). Juga sempat kejebak cache CDN Hostinger (`hcdn`) yang nyimpen response lama di sebagian edge node — solusinya generate hash filename baru (`resources/js/app.js`/`resources/css/app.css` diubah dikit) biar dianggap file baru, bukan andalin manual purge cache.
+
+### Bug dropdown Logout tidak bisa diklik — BELUM KETEMU AKAR MASALAHNYA, di-workaround (2026-07-05)
+
+Setelah fix MIME type di atas, dropdown user menu (Alpine.js, `x-dropdown` component) di sidebar TETAP nggak bisa diklik — baik di production maupun **lokal** (jadi bukan soal Hostinger/CDN), di Chrome maupun browser lain, tanpa ada satupun console error. `window.Alpine` selalu `undefined` di browser user. Anehnya, test via Chrome headless (`google-chrome --headless=new --enable-logging=stderr`) di mesin yang SAMA nunjukkin Alpine.js berhasil load normal (`typeof window.Alpine === 'object'`) — kontradiksi yang nggak sempat terpecahkan (kemungkinan sesuatu spesifik di profil browser/sistem user, tapi belum ketemu penyebab pastinya karena user mau lanjut cepat).
+
+**Keputusan**: daripada terus debug, `resources/views/layouts/navigation.blade.php` bagian user-menu diubah dari `<x-dropdown>` (butuh Alpine.js) jadi **link statis yang selalu kelihatan** (bukan disembunyikan di balik dropdown) — "Profil" pakai `<a>` biasa, "Keluar" pakai `<form method="POST">` + `<button type="submit">` TANPA `onclick`/JS sama sekali. Ini robust terhadap masalah JS apapun karena logout adalah aksi kritis yang nggak boleh bergantung ke Alpine/JS buat bisa diakses.
+
+**Kalau nanti mau investigasi ulang akar masalah Alpine.js ini** (opsional, bukan blocker lagi): coba cek `chrome://policy`, extension yang terinstall, atau setting "Disable JavaScript" di DevTools Command Menu (`Cmd+Shift+P`) — itu yang belum sempat dicek user pas kejadian ini. Komponen `<x-dropdown>` (`resources/views/components/dropdown.blade.php`) masih ada filenya tapi SEKARANG SUDAH TIDAK DIPAKAI DI MANA PUN (dead code, sengaja dibiarkan file-nya kalau-kalau Alpine.js ternyata beres dan mau dipakai lagi nanti) — jangan pasang balik ke navigasi tanpa mastiin Alpine.js beneran jalan dulu.
+
 ## Migrasi PostgreSQL → MySQL (2026-07-05)
 
 Project ini awalnya dibangun pakai PostgreSQL (lihat riwayat di bawah), tapi paket Hostinger yang sudah dibeli client (**Cloud Hosting "Startup"**) cuma nyediain database MySQL — dicek langsung lewat hPanel (menu Database → Pengelolaan cuma ada opsi "Buat Database MySQL", nggak ada PostgreSQL sama sekali) dan nggak ada akses root/sudo buat install PostgreSQL sendiri (bukan VPS). Keputusan user: migrasi ke MySQL daripada upgrade ke VPS.
