@@ -5,3 +5,7 @@
 [x-cloak] {
     display: none !important;
 }
+
+:root {
+    --aquaclear-build-tag: "2026-07-05-mime-fix";
+}
