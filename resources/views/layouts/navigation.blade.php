@@ -24,35 +24,28 @@
     </nav>
 
     <!-- User -->
-    <div class="p-3 border-t border-slate-100 dark:border-slate-800">
-        <x-dropdown align="top" width="60">
-            <x-slot name="trigger">
-                <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left">
-                    <div class="w-9 h-9 rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 flex items-center justify-center font-semibold text-sm shrink-0">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{{ Auth::user()->name }}</div>
-                        <div class="text-xs text-slate-400 capitalize truncate">{{ Auth::user()->getRoleNames()->first() ?? '—' }}</div>
-                    </div>
-                    <x-icon name="chevron-down" class="w-4 h-4 text-slate-400 shrink-0" />
-                </button>
-            </x-slot>
+    <div class="p-3 border-t border-slate-100 dark:border-slate-800 space-y-1">
+        <div class="flex items-center gap-3 px-3 py-2.5">
+            <div class="w-9 h-9 rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 flex items-center justify-center font-semibold text-sm shrink-0">
+                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{{ Auth::user()->name }}</div>
+                <div class="text-xs text-slate-400 capitalize truncate">{{ Auth::user()->getRoleNames()->first() ?? '—' }}</div>
+            </div>
+        </div>
 
-            <x-slot name="content">
-                <x-dropdown-link :href="route('profile.edit')">
-                    {{ __('Profil') }}
-                </x-dropdown-link>
+        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition">
+            <x-icon name="user" class="w-4 h-4 shrink-0" />
+            {{ __('Profil') }}
+        </a>
 
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-dropdown-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Keluar') }}
-                    </x-dropdown-link>
-                </form>
-            </x-slot>
-        </x-dropdown>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition text-left">
+                <x-icon name="logout" class="w-4 h-4 shrink-0" />
+                {{ __('Keluar') }}
+            </button>
+        </form>
     </div>
 </div>
