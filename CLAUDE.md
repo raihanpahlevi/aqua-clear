@@ -9,6 +9,18 @@ Timeline: 14 hari, solo dev. Nilai kontrak Rp 27.000.000, free maintenance 4 bul
 Stack: **Laravel 12 + MySQL + Blade + TailwindCSS**. Deploy: git push ke GitHub → SSH pull di Hostinger.
 Basis kode banyak reuse dari project POS SaaS sebelumnya (auth, multi-tenant hardening, role/permission, komponen UI Blade+Tailwind) — cek pola itu dulu sebelum bikin dari nol.
 
+## Deploy Pertama ke Hostinger (2026-07-05)
+
+Domain sementara: `midnightblue-pig-552346.hostingersite.com` (dibuat via hPanel → Tambah Website → **Custom website PHP/HTML** — BUKAN "Aplikasi Web Node.js", itu buat runtime Node bukan PHP). Struktur di server: repo di-clone ke `~/domains/<domain>/app`, lalu `public_html` di-symlink ke `app/public` (`ln -s app/public public_html`) — bukan clone langsung ke `public_html`.
+
+Server Hostinger PHP-nya **8.3.30**, tapi laptop dev pakai **PHP 8.5.6** — ini bikin masalah nyata: `composer.lock` yang di-generate di laptop otomatis pilih versi terbaru package (termasuk beberapa `symfony/*` yang butuh PHP ≥8.4.1) karena Composer resolve berdasarkan PHP yang lagi jalan, bukan `"php": "^8.2"` yang dideclare di `composer.json`. Alhasil `composer install --no-dev` di server Hostinger gagal duluan pas awal deploy pertama.
+
+**Fix**: tambahin `"config.platform.php"` di `composer.json` (di-set ke `8.3.0`, samain persis versi PHP Hostinger) supaya Composer SELALU resolve dependency yang kompatibel dengan 8.3, apapun versi PHP yang jalan pas `composer update` di laptop manapun. Juga ketauan `spatie/laravel-permission ^8.1` butuh PHP ^8.3 (bukan ^8.2 kayak yang dideclare project ini) — jadi `"php"` di `require` juga dinaikkan ke `^8.3` biar konsisten. Setelah fix, `composer update` regenerate lock dengan versi symfony yang di-downgrade ke seri 7.4.x (kompatibel 8.3), `spatie/laravel-permission` naik ke 8.3.0 — 82 test tetap lolos.
+
+**Pelajaran buat sesi depan**: kalau pindah mesin dev lagi atau upgrade PHP lokal, cek `composer.json config.platform.php` masih cocok sama PHP di server production SEBELUM push — jangan asumsikan lock file dari laptop otomatis jalan di server, terutama kalau versi PHP lokal lebih baru dari server.
+
+`public/build` (hasil `npm run build`) sengaja di-commit ke git (dihapus dari `.gitignore`) karena server Hostinger cuma perlu PHP+Composer, TIDAK perlu install Node.js — build asset dilakukan di laptop sebelum push, bukan di server.
+
 ## Migrasi PostgreSQL → MySQL (2026-07-05)
 
 Project ini awalnya dibangun pakai PostgreSQL (lihat riwayat di bawah), tapi paket Hostinger yang sudah dibeli client (**Cloud Hosting "Startup"**) cuma nyediain database MySQL — dicek langsung lewat hPanel (menu Database → Pengelolaan cuma ada opsi "Buat Database MySQL", nggak ada PostgreSQL sama sekali) dan nggak ada akses root/sudo buat install PostgreSQL sendiri (bukan VPS). Keputusan user: migrasi ke MySQL daripada upgrade ke VPS.
