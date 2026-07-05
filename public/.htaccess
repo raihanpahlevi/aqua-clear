@@ -1,7 +1,12 @@
-<IfModule mod_mime.c>
-    AddType text/javascript .js
-    AddType text/css .css
-</IfModule>
+AddType text/javascript .js
+AddType text/css .css
+
+<FilesMatch "\.js$">
+    ForceType text/javascript
+</FilesMatch>
+<FilesMatch "\.css$">
+    ForceType text/css
+</FilesMatch>
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
