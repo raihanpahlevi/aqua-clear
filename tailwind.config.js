@@ -16,7 +16,20 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"Public Sans"', ...defaultTheme.fontFamily.sans],
+                display: ['"Space Grotesk"', ...defaultTheme.fontFamily.sans],
+                mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
+            },
+            colors: {
+                ink: '#17211D',
+                'teal-deep': '#143C36',
+                'teal-mid': '#2B6357',
+                paper: '#FAF7F0',
+                sand: '#E4D9BE',
+                lumpur: '#7C6B4F',
+                sehat: '#3F8A5E',
+                perhatian: '#C98A2E',
+                kritis: '#B23B3B',
             },
         },
     },

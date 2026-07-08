@@ -3,21 +3,34 @@
 namespace App\Services;
 
 use App\Models\DailyLog;
+use App\Models\EmergencyLog;
 use App\Models\Harvest;
+use App\Models\InventoryUsage;
 use App\Models\Pond;
 use App\Models\Sampling;
 use App\Models\Stocking;
+use App\Models\WaterQualityWeekly;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
- * 6 kartu KPI dashboard — PRD Bagian 7.
+ * 6 kartu KPI dashboard — PRD Bagian 7 — plus data "ruang kontrol" (controlRoomData).
  */
 class DashboardService
 {
+    /** Ambang MBW panen partial 1 (PRD 5.4) — sama dengan estimasiBiomassSiapPanen. */
+    private const MBW_SIAP_PANEN = 13.0;
+
+    /** Ambang MBW masuk daftar "Menuju Panen" di dashboard. */
+    private const MBW_MENUJU_PANEN = 11.0;
+
     public function __construct(
         private GrowthService $growthService,
         private FeedService $feedService,
         private CostService $costService,
+        private DocService $docService,
+        private WaterQualityService $waterQualityService,
     ) {
     }
 
@@ -138,5 +151,309 @@ class DashboardService
             ->sortByDesc('waktu')
             ->take($limit)
             ->values();
+    }
+
+    /**
+     * Seluruh data dashboard "ruang kontrol" dalam belasan query TOTAL, berapa pun
+     * jumlah kolam — JANGAN tambah query per-kolam/per-stocking di dalam loop sini.
+     * Semua rumus tetap dari service masing-masing (Growth/Feed/Doc/WaterQuality);
+     * method ini cuma mem-batch pengambilan datanya.
+     */
+    public function controlRoomData(int $farmId): array
+    {
+        $today = now();
+
+        // 1 query — semua kolam + blok
+        $ponds = Pond::with('block')
+            ->whereHas('block', fn ($q) => $q->where('farm_id', $farmId))
+            ->orderBy('kode_kolam')
+            ->get();
+
+        $activePondIds = $ponds->where('status', 'aktif')->pluck('id');
+
+        // 1 query — stocking terbaru per kolam aktif
+        $stockings = Stocking::whereIn('pond_id', $activePondIds)
+            ->orderByDesc('tgl_tebar')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('pond_id')
+            ->values();
+
+        $stockingIds = $stockings->pluck('id');
+        $stockingByPond = $stockings->keyBy('pond_id');
+
+        // 1 query — SEMUA sampling stocking aktif (metrik terkini, SR-drop, tren 30 hari)
+        $samplingsByStocking = Sampling::whereIn('stocking_id', $stockingIds)
+            ->orderByDesc('tgl')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('stocking_id');
+
+        // 2 query — log harian & uji mingguan TERBARU per stocking
+        $latestDailyLogs = $this->latestPerStocking(DailyLog::query(), 'daily_logs', $stockingIds);
+        $latestWeeklies = $this->latestPerStocking(WaterQualityWeekly::query(), 'water_quality_weekly', $stockingIds);
+
+        // 1 query — emergency 7 hari terakhir (<=3 hari → status kritis, <=7 hari → flush-out)
+        $emergenciesByStocking = EmergencyLog::whereIn('stocking_id', $stockingIds)
+            ->where('tgl', '>=', $today->copy()->subDays(7)->startOfDay())
+            ->get()
+            ->groupBy('stocking_id');
+
+        // 1 query — akumulasi pakan per stocking (FCR)
+        $pakanPerStocking = DailyLog::whereIn('stocking_id', $stockingIds)
+            ->selectRaw('stocking_id, COALESCE(SUM(pakan_07_kg),0) + COALESCE(SUM(pakan_11_kg),0) + COALESCE(SUM(pakan_15_kg),0) + COALESCE(SUM(pakan_19_kg),0) as total')
+            ->groupBy('stocking_id')
+            ->pluck('total', 'stocking_id');
+
+        // === Status per kolam (murni PHP, tanpa query tambahan) ===
+        $tiles = $ponds->map(function (Pond $pond) use ($stockingByPond, $samplingsByStocking, $latestDailyLogs, $latestWeeklies, $emergenciesByStocking, $today) {
+            $stocking = $pond->status === 'aktif' ? $stockingByPond->get($pond->id) : null;
+
+            if (! $stocking) {
+                return [
+                    'pond' => $pond,
+                    'stocking' => null,
+                    'doc' => null,
+                    'status' => 'idle',
+                    'siapPanen' => false,
+                    'latestSampling' => null,
+                    'violations' => [],
+                    'samplingDue' => false,
+                    'emergency3d' => false,
+                    'emergencies' => collect(),
+                    'flushOut' => false,
+                ];
+            }
+
+            $samplings = $samplingsByStocking->get($stocking->id, collect());
+            $latestSampling = $samplings->first();
+            $prevSampling = $samplings->skip(1)->first();
+
+            $latestDaily = $latestDailyLogs->get($stocking->id);
+            $latestWeekly = $latestWeeklies->get($stocking->id);
+            $violations = array_merge(
+                $latestDaily ? $this->waterQualityService->dailyViolations($latestDaily) : [],
+                $latestWeekly ? $this->waterQualityService->weeklyViolations($latestWeekly) : [],
+            );
+
+            $emergencies = $emergenciesByStocking->get($stocking->id, collect());
+            $emergency3d = $emergencies->contains(fn (EmergencyLog $log) => $log->tgl->gte($today->copy()->subDays(3)));
+
+            // Jadwal sampling hari ini — tidak ditagih lagi kalau hari ini sudah ada sampling masuk
+            $samplingDue = $this->docService->isSamplingDue($stocking, $today)
+                && (! $latestSampling || ! $latestSampling->tgl->isSameDay($today));
+
+            $siapPanen = $latestSampling && (float) $latestSampling->mbw >= self::MBW_SIAP_PANEN;
+
+            $srDrop = $this->growthService->isSharpSrDrop($latestSampling, $prevSampling, $stocking->jumlah_tebar);
+            $flushOut = $this->docService->shouldRecommendFlushOut($stocking, $srDrop || $emergencies->isNotEmpty(), $today);
+
+            $status = match (true) {
+                $emergency3d => 'kritis',
+                ! empty($violations) || $samplingDue => 'perhatian',
+                $siapPanen => 'siap-panen',
+                default => 'sehat',
+            };
+
+            return [
+                'pond' => $pond,
+                'stocking' => $stocking,
+                'doc' => $this->docService->today($stocking),
+                'status' => $status,
+                'siapPanen' => $siapPanen,
+                'latestSampling' => $latestSampling,
+                'violations' => $violations,
+                'samplingDue' => $samplingDue,
+                'emergency3d' => $emergency3d,
+                'emergencies' => $emergencies,
+                'flushOut' => $flushOut,
+            ];
+        });
+
+        $activeTiles = $tiles->filter(fn (array $t) => $t['stocking'] !== null);
+        $withSampling = $activeTiles->filter(fn (array $t) => $t['latestSampling'] !== null);
+
+        // === Hero ===
+        $totalBiomass = $withSampling->sum(fn (array $t) => $this->growthService->biomassKg($t['latestSampling']->populasi, (float) $t['latestSampling']->mbw));
+        $avgSr = $withSampling->isEmpty()
+            ? null
+            : $withSampling->avg(fn (array $t) => $this->growthService->survivalRate($t['latestSampling']->populasi, $t['stocking']->jumlah_tebar));
+        $docs = $activeTiles->pluck('doc')->filter(fn ($d) => $d !== null);
+        $avgDoc = $docs->isEmpty() ? null : (int) round($docs->avg());
+
+        // === Tren biomass 30 hari (reuse sampling yang sudah dimuat — tanpa query baru) ===
+        $trend = $samplingsByStocking->flatten(1)
+            ->filter(fn (Sampling $s) => $s->tgl->gte($today->copy()->subDays(30)->startOfDay()))
+            ->groupBy(fn (Sampling $s) => $s->tgl->format('Y-m-d'))
+            ->map(fn (Collection $group) => $group->sum(fn (Sampling $s) => $this->growthService->biomassKg($s->populasi, (float) $s->mbw)))
+            ->sortKeys();
+
+        // === Metrik sekunder ===
+        $fcrs = $activeTiles->map(function (array $t) use ($pakanPerStocking) {
+            $biomass = $t['latestSampling']
+                ? $this->growthService->biomassKg($t['latestSampling']->populasi, (float) $t['latestSampling']->mbw)
+                : null;
+
+            return $this->feedService->fcr((float) ($pakanPerStocking[$t['stocking']->id] ?? 0), $biomass);
+        })->filter(fn ($f) => $f !== null);
+
+        // 2 query — pakan bulan berjalan (kg dari daily_logs, Rp dari pembelian inventory)
+        $pakanKg = (float) DailyLog::whereIn('stocking_id', $stockingIds)
+            ->whereBetween('tgl', [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()])
+            ->selectRaw('COALESCE(SUM(pakan_07_kg),0) + COALESCE(SUM(pakan_11_kg),0) + COALESCE(SUM(pakan_15_kg),0) + COALESCE(SUM(pakan_19_kg),0) as total')
+            ->value('total');
+        $pakanRp = (float) InventoryUsage::whereIn('stocking_id', $stockingIds)
+            ->where('kategori', 'pakan')
+            ->whereBetween('tgl', [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()])
+            ->sum('harga');
+
+        // 2 query — laba/rugi berjalan; rumus identik CostService::labaRugi
+        // (pendapatan panen − (harga_benur + semua biaya inventory)), cuma di-batch.
+        $biayaInventory = InventoryUsage::whereIn('stocking_id', $stockingIds)
+            ->selectRaw('stocking_id, COALESCE(SUM(harga),0) as total')
+            ->groupBy('stocking_id')
+            ->pluck('total', 'stocking_id');
+        $pendapatanPanen = Harvest::whereIn('stocking_id', $stockingIds)
+            ->selectRaw('stocking_id, COALESCE(SUM(pendapatan),0) as total')
+            ->groupBy('stocking_id')
+            ->pluck('total', 'stocking_id');
+        $labaRugi = $stockings->sum(fn (Stocking $s) => (float) ($pendapatanPanen[$s->id] ?? 0)
+            - ((float) ($s->harga_benur ?? 0) + (float) ($biayaInventory[$s->id] ?? 0)));
+
+        // === Perlu Perhatian Hari Ini (prioritas: emergency → mutu air → sampling due → flush-out) ===
+        $perluPerhatian = collect();
+        foreach ($activeTiles as $t) {
+            $url = route('stockings.show', $t['stocking']);
+            $kolam = $t['pond']->kode_kolam;
+
+            if ($t['emergency3d']) {
+                $terakhir = $t['emergencies']->sortByDesc('tgl')->first();
+                $perluPerhatian->push(['prioritas' => 1, 'tone' => 'kritis', 'kolam' => $kolam, 'pesan' => 'Emergency: '.$terakhir->jenis, 'url' => $url]);
+            }
+            if (! empty($t['violations'])) {
+                $lain = count($t['violations']) - 1;
+                $pesan = $t['violations'][0].($lain > 0 ? " (+{$lain} pelanggaran lain)" : '');
+                $perluPerhatian->push(['prioritas' => 2, 'tone' => 'perhatian', 'kolam' => $kolam, 'pesan' => $pesan, 'url' => $url]);
+            }
+            if ($t['samplingDue']) {
+                $perluPerhatian->push(['prioritas' => 3, 'tone' => 'perhatian', 'kolam' => $kolam, 'pesan' => 'Jadwal sampling hari ini (DOC '.$t['doc'].')', 'url' => $url]);
+            }
+            if ($t['flushOut']) {
+                $perluPerhatian->push(['prioritas' => 4, 'tone' => 'perhatian', 'kolam' => $kolam, 'pesan' => 'Rekomendasi flush-out — DOC < 30 dengan kondisi kritis', 'url' => $url]);
+            }
+        }
+
+        // === Menuju Panen ===
+        $menujuPanen = $activeTiles
+            ->filter(fn (array $t) => $t['latestSampling'] && (float) $t['latestSampling']->mbw >= self::MBW_MENUJU_PANEN)
+            ->map(fn (array $t) => [
+                'kolam' => $t['pond']->kode_kolam,
+                'doc' => $t['doc'],
+                'mbw' => (float) $t['latestSampling']->mbw,
+                'size' => $this->growthService->size((float) $t['latestSampling']->mbw),
+                'biomass' => $this->growthService->biomassKg($t['latestSampling']->populasi, (float) $t['latestSampling']->mbw),
+                'siap' => (float) $t['latestSampling']->mbw >= self::MBW_SIAP_PANEN,
+                'url' => route('stockings.show', $t['stocking']),
+            ])
+            ->sortByDesc('mbw')
+            ->values();
+
+        return [
+            'hero' => [
+                'totalBiomass' => $totalBiomass,
+                'avgSr' => $avgSr,
+                'avgDoc' => $avgDoc,
+                'kolamAktif' => $ponds->where('status', 'aktif')->count(),
+                'kolamTotal' => $ponds->count(),
+            ],
+            'sparkline' => [
+                'values' => $trend->values()->all(),
+                'points' => $this->sparklinePoints($trend->values()),
+            ],
+            'petaKolam' => $tiles->groupBy(fn (array $t) => $t['pond']->block->nama)->sortKeys(),
+            'metrik' => [
+                'fcr' => $fcrs->isEmpty() ? null : $fcrs->avg(),
+                'pakanBulanIni' => ['kg' => $pakanKg, 'rp' => $pakanRp],
+                'labaRugi' => $labaRugi,
+            ],
+            'perluPerhatian' => $perluPerhatian->sortBy('prioritas')->values(),
+            'menujuPanen' => $menujuPanen,
+            'aktivitasTerbaru' => $this->aktivitasRingkas($farmId, 6),
+        ];
+    }
+
+    /**
+     * Versi hemat-query dari aktivitasTerbaru (3 query flat pakai join, tanpa
+     * eager-load per model) — khusus dashboard control room. Bentuk item sama.
+     */
+    private function aktivitasRingkas(int $farmId, int $limit): Collection
+    {
+        $ambil = function (string $table, string $tipe) use ($farmId, $limit) {
+            return DB::table($table)
+                ->join('stockings', 'stockings.id', '=', "{$table}.stocking_id")
+                ->join('ponds', 'ponds.id', '=', 'stockings.pond_id')
+                ->join('blocks', 'blocks.id', '=', 'ponds.block_id')
+                ->where('blocks.farm_id', $farmId)
+                ->orderByDesc("{$table}.created_at")
+                ->limit($limit)
+                ->get(["{$table}.tgl", "{$table}.created_at", 'ponds.kode_kolam'])
+                ->map(fn ($row) => [
+                    'tipe' => $tipe,
+                    'kolam' => $row->kode_kolam,
+                    'tgl' => \Illuminate\Support\Carbon::parse($row->tgl),
+                    'waktu' => \Illuminate\Support\Carbon::parse($row->created_at),
+                ]);
+        };
+
+        return $ambil('daily_logs', 'Pakan & Kualitas Air')
+            ->concat($ambil('samplings', 'Sampling'))
+            ->concat($ambil('harvests', 'Panen'))
+            ->sortByDesc('waktu')
+            ->take($limit)
+            ->values();
+    }
+
+    /**
+     * Baris TERBARU (tgl paling akhir) per stocking dalam SATU query lewat
+     * tuple-IN — hindari query per stocking.
+     */
+    private function latestPerStocking(Builder $query, string $table, Collection $stockingIds): Collection
+    {
+        if ($stockingIds->isEmpty()) {
+            return collect();
+        }
+
+        return $query
+            ->whereIn('stocking_id', $stockingIds)
+            ->whereIn(DB::raw('(stocking_id, tgl)'), function ($sub) use ($table, $stockingIds) {
+                $sub->selectRaw('stocking_id, MAX(tgl)')
+                    ->from($table)
+                    ->whereIn('stocking_id', $stockingIds)
+                    ->groupBy('stocking_id');
+            })
+            ->get()
+            ->keyBy('stocking_id');
+    }
+
+    /**
+     * String "x,y x,y …" untuk <polyline> sparkline (viewBox 100×30, y terbalik).
+     * Murni transformasi koordinat buat tampilan — bukan rumus bisnis.
+     */
+    private function sparklinePoints(Collection $values): string
+    {
+        if ($values->count() < 2) {
+            return '';
+        }
+
+        $min = $values->min();
+        $max = $values->max();
+        $range = $max - $min;
+        $stepX = 100 / ($values->count() - 1);
+
+        return $values->values()->map(function ($v, $i) use ($min, $range, $stepX) {
+            $y = $range > 0 ? 27 - (($v - $min) / $range) * 24 : 15.0;
+
+            return round($i * $stepX, 1).','.round($y, 1);
+        })->implode(' ');
     }
 }

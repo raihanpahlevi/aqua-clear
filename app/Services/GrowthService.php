@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Sampling;
 use App\Models\Stocking;
 
 /**
@@ -67,14 +68,21 @@ class GrowthService
     {
         $duaTerakhir = $stocking->samplings()->latest('tgl')->limit(2)->get();
 
-        if ($duaTerakhir->count() < 2) {
+        return $this->isSharpSrDrop($duaTerakhir->get(0), $duaTerakhir->get(1), $stocking->jumlah_tebar, $ambangPoin);
+    }
+
+    /**
+     * Versi murni (tanpa query) dari hasSharpSrDrop — buat pemanggil yang sudah
+     * preload sampling-nya (mis. dashboard) supaya tidak query per stocking.
+     */
+    public function isSharpSrDrop(?Sampling $terbaru, ?Sampling $sebelumnya, int $jumlahTebar, float $ambangPoin = 10.0): bool
+    {
+        if (! $terbaru || ! $sebelumnya) {
             return false;
         }
 
-        [$terbaru, $sebelumnya] = $duaTerakhir;
-
-        $srTerbaru = $this->survivalRate($terbaru->populasi, $stocking->jumlah_tebar);
-        $srSebelumnya = $this->survivalRate($sebelumnya->populasi, $stocking->jumlah_tebar);
+        $srTerbaru = $this->survivalRate($terbaru->populasi, $jumlahTebar);
+        $srSebelumnya = $this->survivalRate($sebelumnya->populasi, $jumlahTebar);
 
         return ($srSebelumnya - $srTerbaru) > $ambangPoin;
     }
