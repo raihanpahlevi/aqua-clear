@@ -12,7 +12,7 @@
                     @include('prep-logs._form', ['prepLog' => $prepLog])
 
                     <div class="flex justify-end gap-3">
-                        <a href="{{ route('ponds.prep-logs.index', $pond) }}" class="text-sm text-slate-500 dark:text-slate-400 py-2">Batal</a>
+                        <a href="{{ route('ponds.prep-logs.index', $pond) }}" class="text-sm text-ink/50 py-2">Batal</a>
                         <x-primary-button>Simpan Perubahan</x-primary-button>
                     </div>
                 </form>

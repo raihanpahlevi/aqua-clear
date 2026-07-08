@@ -8,7 +8,7 @@
 
 <div>
     <x-input-label for="jenis" value="Jenis" />
-    <select id="jenis" name="jenis" required onchange="document.querySelectorAll('[data-jenis]').forEach(el => el.classList.add('hidden')); document.querySelector('[data-jenis=' + this.value + ']').classList.remove('hidden');" class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="jenis" name="jenis" required onchange="document.querySelectorAll('[data-jenis]').forEach(el => el.classList.add('hidden')); document.querySelector('[data-jenis=' + this.value + ']').classList.remove('hidden');" class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         <option value="tambak" @selected($selectedJenis === 'tambak')>Persiapan Tambak</option>
         <option value="air" @selected($selectedJenis === 'air')>Persiapan Air</option>
     </select>
@@ -23,7 +23,7 @@
     </div>
     <div>
         <x-input-label for="cycle_id" value="Siklus (opsional)" />
-        <select id="cycle_id" name="cycle_id" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+        <select id="cycle_id" name="cycle_id" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
             <option value="">—</option>
             @foreach ($cycles as $cycle)
                 <option value="{{ $cycle->id }}" @selected($old('cycle_id') == $cycle->id)>{{ $cycle->nama }}</option>
@@ -36,16 +36,16 @@
     <x-input-label value="Checklist (bebas, centang yang sudah selesai)" />
     <div data-jenis="tambak" class="{{ $selectedJenis !== 'tambak' ? 'hidden' : '' }} mt-2 space-y-2">
         @foreach (\App\Http\Controllers\PrepLogController::CHECKLIST_ITEMS['tambak'] as $item)
-            <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <input type="checkbox" name="checklist[{{ $item }}]" value="1" @checked(isset($checkedItems[$item])) class="rounded border-slate-300 dark:border-slate-600 text-teal-600 focus:ring-teal-500">
+            <label class="flex items-center gap-2 text-sm text-ink/70">
+                <input type="checkbox" name="checklist[{{ $item }}]" value="1" @checked(isset($checkedItems[$item])) class="rounded border-lumpur/40 text-teal-mid focus:ring-teal-mid">
                 {{ $item }}
             </label>
         @endforeach
     </div>
     <div data-jenis="air" class="{{ $selectedJenis !== 'air' ? 'hidden' : '' }} mt-2 space-y-2">
         @foreach (\App\Http\Controllers\PrepLogController::CHECKLIST_ITEMS['air'] as $item)
-            <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <input type="checkbox" name="checklist[{{ $item }}]" value="1" @checked(isset($checkedItems[$item])) class="rounded border-slate-300 dark:border-slate-600 text-teal-600 focus:ring-teal-500">
+            <label class="flex items-center gap-2 text-sm text-ink/70">
+                <input type="checkbox" name="checklist[{{ $item }}]" value="1" @checked(isset($checkedItems[$item])) class="rounded border-lumpur/40 text-teal-mid focus:ring-teal-mid">
                 {{ $item }}
             </label>
         @endforeach

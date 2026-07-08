@@ -10,18 +10,18 @@
 </div>
 
 <div>
-    <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Pakan & Ancho (4x sehari)</h3>
+    <h3 class="font-semibold text-ink/80 mb-2">Pakan & Ancho (4x sehari)</h3>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         @foreach (['07' => '07.00', '11' => '11.00', '15' => '15.00', '19' => '19.00'] as $jam => $label)
-            <div class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
-                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $label }}</div>
+            <div class="p-3 border border-lumpur/20 rounded-lg space-y-2">
+                <div class="text-xs font-semibold text-ink/50">{{ $label }}</div>
                 <div>
                     <x-input-label for="pakan_{{ $jam }}_kg" value="Pakan (kg)" />
                     <x-text-input id="pakan_{{ $jam }}_kg" name="pakan_{{ $jam }}_kg" type="number" step="0.01" class="mt-1 block w-full" :value="$old('pakan_'.$jam.'_kg')" />
                 </div>
                 <div>
                     <x-input-label for="ancho_{{ $jam }}" value="Ancho (+2 jam)" />
-                    <select id="ancho_{{ $jam }}" name="ancho_{{ $jam }}" class="mt-1 block w-full text-sm border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+                    <select id="ancho_{{ $jam }}" name="ancho_{{ $jam }}" class="mt-1 block w-full text-sm border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
                         <option value="">—</option>
                         @foreach ($anchoOptions as $value => $label2)
                             <option value="{{ $value }}" @selected($old('ancho_'.$jam) === $value)>{{ $label2 }}</option>
@@ -38,7 +38,7 @@
 </div>
 
 <div>
-    <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Kualitas Air Harian</h3>
+    <h3 class="font-semibold text-ink/80 mb-2">Kualitas Air Harian</h3>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
             <x-input-label for="do_pagi" value="DO Pagi (>4 ppm)" />
@@ -75,10 +75,10 @@
     <div>
         <x-input-label for="mortalitas" value="Mortalitas Observasi (ekor)" />
         <x-text-input id="mortalitas" name="mortalitas" type="number" class="mt-1 block w-full" :value="$old('mortalitas')" />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem otomatis kali 2 untuk laporan (kanibalisme udang).</p>
+        <p class="text-xs text-ink/50 mt-1">Sistem otomatis kali 2 untuk laporan (kanibalisme udang).</p>
     </div>
     <div>
         <x-input-label for="catatan" value="Catatan" />
-        <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
+        <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
     </div>
 </div>

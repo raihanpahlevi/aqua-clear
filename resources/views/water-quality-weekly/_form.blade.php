@@ -9,7 +9,7 @@
 </div>
 
 <div>
-    <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Mingguan</h3>
+    <h3 class="font-semibold text-ink/80 mb-2">Mingguan</h3>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
             <x-input-label for="tan" value="TAN (<2 ppm)" />
@@ -31,7 +31,7 @@
 </div>
 
 <div>
-    <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">10 Hari Sekali (uji lab, tanpa ambang pasti)</h3>
+    <h3 class="font-semibold text-ink/80 mb-2">10 Hari Sekali (uji lab, tanpa ambang pasti)</h3>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div>
             <x-input-label for="tom" value="TOM" />
@@ -49,8 +49,8 @@
 </div>
 
 <div>
-    <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">7 Hari Sekali — Vibrio & Bakteri</h3>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Rasio V/B dihitung otomatis; warning kalau &gt;10%. "Vibrio tinggi" khusus vibrio hijau, hitam, luminer.</p>
+    <h3 class="font-semibold text-ink/80 mb-2">7 Hari Sekali — Vibrio & Bakteri</h3>
+    <p class="text-xs text-ink/50 mb-2">Rasio V/B dihitung otomatis; warning kalau &gt;10%. "Vibrio tinggi" khusus vibrio hijau, hitam, luminer.</p>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
             <x-input-label for="vibrio_hijau" value="Vibrio Hijau" />

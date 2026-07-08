@@ -1,10 +1,10 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-slate-900 dark:text-slate-100">
+        <h2 class="text-lg font-medium text-ink">
             {{ __('Profile Information') }}
         </h2>
 
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p class="mt-1 text-sm text-ink/60">
             {{ __("Update your account's profile information and email address.") }}
         </p>
     </header>
@@ -30,16 +30,16 @@
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div>
-                    <p class="text-sm mt-2 text-slate-800 dark:text-slate-200">
+                    <p class="text-sm mt-2 text-ink">
                         {{ __('Your email address is unverified.') }}
 
-                        <button form="send-verification" class="underline text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-offset-slate-800">
+                        <button form="send-verification" class="underline text-sm text-ink/60 hover:text-ink rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-mid">
                             {{ __('Click here to re-send the verification email.') }}
                         </button>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-emerald-600 dark:text-emerald-400">
+                        <p class="mt-2 font-medium text-sm text-sehat">
                             {{ __('A new verification link has been sent to your email address.') }}
                         </p>
                     @endif
@@ -56,7 +56,7 @@
                     x-show="show"
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-slate-600 dark:text-slate-400"
+                    class="text-sm text-ink/60"
                 >{{ __('Saved.') }}</p>
             @endif
         </div>

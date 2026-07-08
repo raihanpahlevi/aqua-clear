@@ -287,9 +287,18 @@ User screenshot browser asli mereka menunjukkan seluruh app masih gelap-navy mes
 
 **Fix**: `tailwind.config.js` diset `darkMode: 'selector'` — varian `dark:` cuma aktif kalau ada class literal `.dark` di parent element, dan app ini SENGAJA TIDAK PERNAH menaruh class `.dark` di manapun (tidak ada toggle dark mode). Efeknya: app SELALU render terang, apapun setting OS/browser user. **Kalau nanti mau nambah toggle dark mode beneran, di situ baru perlu logic buat add/remove class `.dark` di `<html>` atau `<body>` — jangan hapus baris `darkMode: 'selector'` ini tanpa itu, karena begitu dihapus perilaku lama (ikut OS) akan balik lagi.**
 
-Setelah fix ini, sedikit sentuhan warna ditambahkan biar nggak plain-plain amat (sesuai permintaan "cerah dan menarik, palette bagus"): background halaman login jadi `bg-teal-50/60` (tint lembut, bukan abu-abu polos), wordmark "Aquaclear" di sidebar/topbar/login pakai warna `text-teal-700` (bukan abu-abu gelap). Palet inti tetap teal (brand/primary) + slate (netral) + amber/emerald/rose/sky (semantic tones di badge & stat-tile) — jangan ganti ke skema warna lain tanpa diminta eksplisit.
+Setelah fix ini, sedikit sentuhan warna ditambahkan biar nggak plain-plain amat (sesuai permintaan "cerah dan menarik, palette bagus"): background halaman login jadi `bg-teal-50/60` (tint lembut, bukan abu-abu polos), wordmark "Aquaclear" di sidebar/topbar/login pakai warna `text-teal-700` (bukan abu-abu gelap). ~~Palet inti tetap teal (brand/primary) + slate (netral) + amber/emerald/rose/sky~~ — **sudah digantikan total oleh design system "Air Payau" di bawah (2026-07-08)**.
 
 **Pelajaran buat sesi depan**: kalau user komplain soal tampilan lagi, verifikasi dulu apakah itu genuinely soal desain, atau soal dark-mode/rendering environment — screenshot dari browser asli user (bukan cuma Chrome headless yang bisa salah nebak color-scheme) adalah cara paling reliable buat mastiin.
+
+## Design System "Air Payau" (redesign 2026-07-08, branch redesign-ui)
+
+Redesign UI atas permintaan eksplisit user (prompt "Rombak Desain"). Semua token di `tailwind.config.js`:
+
+- **Warna**: `ink` #17211D (teks), `teal-deep` #143C36 (sidebar/brand), `teal-mid` #2B6357 (aksi/link), `paper` #FAF7F0 (background halaman & input), `sand` #E4D9BE (tint kartu, `bg-sand/40`), `lumpur` #7C6B4F (border, `border-lumpur/20`), `sehat` #3F8A5E, `perhatian` #C98A2E, `kritis` #B23B3B (status semantik).
+- **Font** (Bunny Fonts): `font-display` = Space Grotesk (judul/heading), `font-sans` = Public Sans (body), `font-mono` = JetBrains Mono (SEMUA angka metrik/tanggal/kode — identitas visual "instrumen lapangan").
+- **Aturan**: JANGAN pakai `slate-*`/`teal-600`/`emerald-*`/`rose-*`/`amber-*`/`sky-*` generik lagi, dan JANGAN tulis `dark:*` (dead code — darkMode 'selector' tanpa toggle; seluruh 636 kemunculan lama sudah dihapus 2026-07-08). Kedalaman pakai border 1px + shift background, bukan shadow. `x-badge` menerima tone lama (emerald/amber/rose/sky/slate) sebagai alias ke tone semantik.
+- **Dashboard** = "ruang kontrol": hero biomass + sparkline SVG murni (TANPA JS/Alpine — lihat bug Alpine di atas), Peta Kolam (grid tile per blok, status kritis>perhatian>siap-panen>sehat>idle), Perlu Perhatian, Menuju Panen. Data dari `DashboardService::controlRoomData()` yang WAJIB tetap batch (~13 query, ada test guard `<=15` di `DashboardControlRoomTest`) — jangan tambah query per-kolam.
 
 ## Rencana Build 14 Hari
 

@@ -10,7 +10,7 @@
 
 <div>
     <x-input-label for="siphon" value="Siphon Dilakukan?" />
-    <select id="siphon" name="siphon" class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="siphon" name="siphon" class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         <option value="">—</option>
         <option value="1" @selected($old('siphon') == 1)>Ya</option>
         <option value="0" @selected($old('siphon') === '0' || $old('siphon') === false)>Tidak</option>
@@ -20,7 +20,7 @@
 <div>
     <x-input-label for="kondisi_lumpur" value="Kondisi Lumpur Dasar (kualitatif)" />
     <x-text-input id="kondisi_lumpur" name="kondisi_lumpur" type="text" class="mt-1 block w-full" :value="$old('kondisi_lumpur')" placeholder="mis. baik, sedang, buruk" />
-    <p class="text-xs text-slate-400 mt-1">Acuan uji lab TOM bila tersedia (lihat Kualitas Air Mingguan).</p>
+    <p class="text-xs text-ink/40 mt-1">Acuan uji lab TOM bila tersedia (lihat Kualitas Air Mingguan).</p>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
@@ -36,5 +36,5 @@
 
 <div>
     <x-input-label for="catatan" value="Catatan" />
-    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
+    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
 </div>

@@ -4,7 +4,7 @@
 
 <div>
     <x-input-label for="block_id" value="Blok" />
-    <select id="block_id" name="block_id" required class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="block_id" name="block_id" required class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         <option value="">— Pilih Blok —</option>
         @foreach ($blocks as $block)
             <option value="{{ $block->id }}" @selected($old('block_id') == $block->id)>Blok {{ $block->nama }}</option>
@@ -34,7 +34,7 @@
 
 <div>
     <x-input-label for="status" value="Status" />
-    <select id="status" name="status" required class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="status" name="status" required class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         @foreach (['kosong', 'siap_tebar', 'aktif', 'panen', 'maintenance'] as $status)
             <option value="{{ $status }}" @selected($old('status', 'kosong') === $status)>{{ str_replace('_', ' ', $status) }}</option>
         @endforeach

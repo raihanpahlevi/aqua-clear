@@ -1,13 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">
+        <h2 class="font-semibold text-xl text-ink leading-tight">
             Catat Kejadian — Kolam {{ $stocking->pond->kode_kolam }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-sm shadow-slate-900/5">
+            <div class="bg-sand/40 p-6 rounded-2xl border border-lumpur/20">
                 <form method="POST" action="{{ route('stockings.emergency-logs.store', $stocking) }}" class="space-y-4">
                     @csrf
 
@@ -25,12 +25,12 @@
 
                     <div>
                         <x-input-label for="tindakan" value="Tindakan Penanganan" />
-                        <textarea id="tindakan" name="tindakan" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">{{ old('tindakan') }}</textarea>
+                        <textarea id="tindakan" name="tindakan" rows="3" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">{{ old('tindakan') }}</textarea>
                     </div>
 
                     <div>
                         <x-input-label for="keputusan" value="Keputusan" />
-                        <select id="keputusan" name="keputusan" class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+                        <select id="keputusan" name="keputusan" class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
                             <option value="">—</option>
                             <option value="lanjut" @selected(old('keputusan') === 'lanjut')>Lanjut</option>
                             <option value="flush_out" @selected(old('keputusan') === 'flush_out')>Flush-out</option>
@@ -40,7 +40,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3">
-                        <a href="{{ route('stockings.emergency-logs.index', $stocking) }}" class="text-sm text-slate-500 dark:text-slate-400 py-2">Batal</a>
+                        <a href="{{ route('stockings.emergency-logs.index', $stocking) }}" class="text-sm text-ink/50 py-2">Batal</a>
                         <x-primary-button>Simpan</x-primary-button>
                     </div>
                 </form>

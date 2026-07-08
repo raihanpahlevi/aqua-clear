@@ -10,7 +10,7 @@
 
 <div>
     <x-input-label for="kategori" value="Kategori" />
-    <select id="kategori" name="kategori" required class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="kategori" name="kategori" required class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         @foreach (['pakan', 'probiotik', 'mineral', 'desinfektan', 'obat'] as $kategori)
             <option value="{{ $kategori }}" @selected($old('kategori') === $kategori)>{{ ucfirst($kategori) }}</option>
         @endforeach
@@ -37,6 +37,6 @@
     <div>
         <x-input-label for="harga" value="Biaya Total (Rp)" />
         <x-text-input id="harga" name="harga" type="number" step="0.01" class="mt-1 block w-full" :value="$old('harga')" />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kosongkan kalau harga acuan belum tersedia.</p>
+        <p class="text-xs text-ink/50 mt-1">Kosongkan kalau harga acuan belum tersedia.</p>
     </div>
 </div>

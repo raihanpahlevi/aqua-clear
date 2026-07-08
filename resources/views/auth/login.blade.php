@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="mb-6">
-        <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Selamat datang kembali</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Masuk untuk kelola data tambak Anda.</p>
+        <h1 class="font-display text-xl font-semibold text-ink">Selamat datang kembali</h1>
+        <p class="text-sm text-ink/50 mt-1">Masuk untuk kelola data tambak Anda.</p>
     </div>
 
     <!-- Session Status -->
@@ -32,12 +32,12 @@
         <!-- Remember Me -->
         <div class="flex items-center justify-between">
             <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-teal-600 shadow-sm focus:ring-teal-500 dark:focus:ring-teal-500 dark:focus:ring-offset-slate-800" name="remember">
-                <span class="ms-2 text-sm text-slate-600 dark:text-slate-400">{{ __('Remember me') }}</span>
+                <input id="remember_me" type="checkbox" class="rounded bg-paper border-lumpur/40 text-teal-mid shadow-sm focus:ring-teal-mid" name="remember">
+                <span class="ms-2 text-sm text-ink/60">{{ __('Remember me') }}</span>
             </label>
 
             @if (Route::has('password.request'))
-                <a class="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-offset-slate-800" href="{{ route('password.request') }}">
+                <a class="text-sm text-teal-mid hover:text-teal-deep font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-mid" href="{{ route('password.request') }}">
                     {{ __('Lupa password?') }}
                 </a>
             @endif

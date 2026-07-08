@@ -4,7 +4,7 @@
 
 <div>
     <x-input-label for="tahap" value="Tahap" />
-    <select id="tahap" name="tahap" required class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="tahap" name="tahap" required class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         @foreach ($referensiTahap as $value => $ref)
             <option value="{{ $value }}" @selected($old('tahap') === $value)>{{ $ref['label'] }} (MBW {{ $ref['mbw'] }}, size {{ $ref['size'] }})</option>
         @endforeach
@@ -38,11 +38,11 @@
 
 <div>
     <x-input-label for="catatan" value="Catatan" />
-    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
+    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
 </div>
 
 @if(($old('tahap') ?? '') === 'total')
-    <div class="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm rounded-lg">
+    <div class="p-3 bg-perhatian/10 text-perhatian text-sm rounded-lg">
         Tahap "Total/Habis" akan mengubah status kolam jadi "panen".
     </div>
 @endif

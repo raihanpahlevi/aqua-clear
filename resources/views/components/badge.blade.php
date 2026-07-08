@@ -1,13 +1,15 @@
 @props(['tone' => 'slate'])
 
 @php
+// Nama tone lama (teal/amber/emerald/rose/sky/slate) dipertahankan sebagai alias
+// supaya view pemanggil tidak perlu diubah — warnanya dipetakan ke design system.
 $toneClasses = match ($tone) {
-    'teal' => 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400',
-    'amber' => 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
-    'emerald' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-    'rose' => 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400',
-    'sky' => 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400',
-    default => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+    'teal' => 'bg-teal-mid/10 text-teal-mid',
+    'amber', 'perhatian' => 'bg-perhatian/15 text-perhatian',
+    'emerald', 'sehat' => 'bg-sehat/10 text-sehat',
+    'rose', 'kritis' => 'bg-kritis/10 text-kritis',
+    'sky' => 'bg-teal-mid/10 text-teal-mid',
+    default => 'bg-lumpur/10 text-lumpur',
 };
 @endphp
 

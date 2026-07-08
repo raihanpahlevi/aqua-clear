@@ -1,20 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">
+        <h2 class="font-semibold text-xl text-ink leading-tight">
             Edit Panen — Kolam {{ $stocking->pond->kode_kolam }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-sm shadow-slate-900/5">
+            <div class="bg-sand/40 p-6 rounded-2xl border border-lumpur/20">
                 <form method="POST" action="{{ route('stockings.harvests.update', [$stocking, $harvest]) }}" class="space-y-4">
                     @csrf
                     @method('PUT')
                     @include('harvests._form', ['harvest' => $harvest])
 
                     <div class="flex justify-end gap-3">
-                        <a href="{{ route('stockings.harvests.index', $stocking) }}" class="text-sm text-slate-500 dark:text-slate-400 py-2">Batal</a>
+                        <a href="{{ route('stockings.harvests.index', $stocking) }}" class="text-sm text-ink/50 py-2">Batal</a>
                         <x-primary-button>Simpan Perubahan</x-primary-button>
                     </div>
                 </form>

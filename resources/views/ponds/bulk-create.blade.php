@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">
+        <h2 class="font-semibold text-xl text-ink leading-tight">
             {{ __('Tambah Banyak Kolam Sekaligus') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-sm shadow-slate-900/5">
+            <div class="bg-sand/40 p-6 rounded-2xl border border-lumpur/20">
 
-                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <p class="text-sm text-ink/50 mb-4">
                     Cocok untuk setup awal (mis. 76 kolam). Kode kolam otomatis dibuat dari prefix + nomor urut — mis. prefix "A", mulai 1, jumlah 15 → A1, A2, ... A15. Kode yang sudah ada otomatis dilewati.
                 </p>
 
@@ -18,7 +18,7 @@
 
                     <div>
                         <x-input-label for="block_id" value="Blok" />
-                        <select id="block_id" name="block_id" required class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+                        <select id="block_id" name="block_id" required class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
                             <option value="">— Pilih Blok —</option>
                             @foreach ($blocks as $block)
                                 <option value="{{ $block->id }}" @selected(old('block_id') == $block->id)>Blok {{ $block->nama }}</option>
@@ -58,7 +58,7 @@
 
                     <div>
                         <x-input-label for="status" value="Status Awal" />
-                        <select id="status" name="status" required class="mt-1 block w-full max-w-xs border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+                        <select id="status" name="status" required class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
                             @foreach (['kosong', 'siap_tebar', 'aktif', 'panen', 'maintenance'] as $status)
                                 <option value="{{ $status }}" @selected(old('status', 'kosong') === $status)>{{ str_replace('_', ' ', $status) }}</option>
                             @endforeach
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3">
-                        <a href="{{ route('ponds.index') }}" class="text-sm text-slate-500 dark:text-slate-400 py-2">Batal</a>
+                        <a href="{{ route('ponds.index') }}" class="text-sm text-ink/50 py-2">Batal</a>
                         <x-primary-button>Buat Kolam</x-primary-button>
                     </div>
                 </form>

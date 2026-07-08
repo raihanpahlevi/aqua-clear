@@ -4,14 +4,14 @@
 
 <div>
     <x-input-label for="cycle_id" value="Siklus" />
-    <select id="cycle_id" name="cycle_id" required class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">
+    <select id="cycle_id" name="cycle_id" required class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         <option value="">— Pilih Siklus —</option>
         @foreach ($cycles as $cycle)
             <option value="{{ $cycle->id }}" @selected(old('cycle_id', $stocking?->cycle_id) == $cycle->id)>{{ $cycle->nama }}</option>
         @endforeach
     </select>
     <x-input-error :messages="$errors->get('cycle_id')" class="mt-2" />
-    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Belum ada siklus yang cocok? <a href="{{ route('cycles.index') }}" class="underline">Tambah siklus baru</a>.</p>
+    <p class="text-xs text-ink/50 mt-1">Belum ada siklus yang cocok? <a href="{{ route('cycles.index') }}" class="underline">Tambah siklus baru</a>.</p>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
@@ -24,7 +24,7 @@
         <x-input-label for="tgl_pakan_pertama" value="Tgl Pakan Pertama (anchor DOC)" />
         <x-text-input id="tgl_pakan_pertama" name="tgl_pakan_pertama" type="date" class="mt-1 block w-full" :value="$old('tgl_pakan_pertama')" />
         <x-input-error :messages="$errors->get('tgl_pakan_pertama')" class="mt-2" />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">DOC dihitung dari tanggal ini, bukan tanggal tebar. Bisa diisi menyusul.</p>
+        <p class="text-xs text-ink/50 mt-1">DOC dihitung dari tanggal ini, bukan tanggal tebar. Bisa diisi menyusul.</p>
     </div>
 </div>
 

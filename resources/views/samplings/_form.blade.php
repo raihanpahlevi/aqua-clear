@@ -6,7 +6,7 @@
     <x-input-label for="tgl" value="Tanggal Sampling" />
     <x-text-input id="tgl" name="tgl" type="date" class="mt-1 block w-full max-w-xs" :value="$old('tgl', $sampling?->tgl?->format('Y-m-d') ?? now()->format('Y-m-d'))" required />
     <x-input-error :messages="$errors->get('tgl')" class="mt-2" />
-    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">DOC dihitung otomatis dari tanggal pakan pertama siklus ini.</p>
+    <p class="text-xs text-ink/50 mt-1">DOC dihitung otomatis dari tanggal pakan pertama siklus ini.</p>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
@@ -19,7 +19,7 @@
         <x-input-label for="jumlah_sampel" value="Jumlah Sampel (ekor)" />
         <x-text-input id="jumlah_sampel" name="jumlah_sampel" type="number" class="mt-1 block w-full" :value="$old('jumlah_sampel')" required />
         <x-input-error :messages="$errors->get('jumlah_sampel')" class="mt-2" />
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">MBW = berat sampel total ÷ jumlah sampel, dihitung otomatis.</p>
+        <p class="text-xs text-ink/50 mt-1">MBW = berat sampel total ÷ jumlah sampel, dihitung otomatis.</p>
     </div>
 </div>
 
@@ -36,5 +36,5 @@
 
 <div>
     <x-input-label for="catatan" value="Catatan" />
-    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 focus:border-teal-500 focus:ring-teal-500 rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
+    <textarea id="catatan" name="catatan" rows="2" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">{{ $old('catatan') }}</textarea>
 </div>
