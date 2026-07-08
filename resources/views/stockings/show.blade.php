@@ -64,6 +64,14 @@
             <x-stat-tile icon="feed" label="FCR" :value="$fcr !== null ? number_format($fcr, 2) : '—'" />
         </div>
 
+        @if ($chartTumbuh)
+            <div class="grid sm:grid-cols-3 gap-4">
+                <x-line-chart title="MBW per Sampling" :points="$chartTumbuh['mbw']" unit="gr" :decimals="2" />
+                <x-line-chart title="ADG per Sampling" :points="$chartTumbuh['adg']" unit="gr/hari" :decimals="3" />
+                <x-line-chart title="SR% per Sampling" :points="$chartTumbuh['sr']" unit="%" :decimals="1" />
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <x-card class="text-sm text-ink/70 space-y-2">
                 <div class="flex justify-between"><span class="text-ink/40">Tgl Tebar</span><span class="font-mono font-medium text-ink/80">{{ $stocking->tgl_tebar->format('d M Y') }}</span></div>
@@ -113,12 +121,7 @@
                             <tr class="hover:bg-sand/30">
                                 <td class="px-5 py-2.5 font-mono text-ink/70">{{ $log->tgl->format('d M Y') }}</td>
                                 <td class="px-5 py-2.5 font-mono text-ink/70">{{ number_format($log->pakan_07_kg + $log->pakan_11_kg + $log->pakan_15_kg + $log->pakan_19_kg, 2) }}</td>
-                                <td class="px-5 py-2.5 text-ink/70">
-                                    {{ $log->mortalitas !== null ? $growthService->correctedMortality($log->mortalitas) : '—' }}
-                                    @if ($log->mortalitas !== null)
-                                        <span class="text-xs text-ink/40">(obs. {{ $log->mortalitas }})</span>
-                                    @endif
-                                </td>
+                                <td class="px-5 py-2.5 font-mono text-ink/70">{{ $log->mortalitas ?? '—' }}</td>
                                 <td class="px-5 py-2.5 font-mono text-ink/70">{{ $log->do_pagi ?? '—' }} / {{ $log->do_sore ?? '—' }}</td>
                                 <td class="px-5 py-2.5 text-right">
                                     <a href="{{ route('stockings.daily-logs.edit', [$stocking, $log]) }}" class="text-ink/40 hover:text-teal-mid">

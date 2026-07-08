@@ -59,12 +59,7 @@
                                 <td class="px-4 py-2 font-mono {{ $phBad ? 'text-kritis font-semibold' : 'text-ink/70' }}">{{ $log->ph_pagi ?? '—' }} / {{ $log->ph_sore ?? '—' }}</td>
                                 <td class="px-4 py-2 font-mono {{ $suhuBad ? 'text-kritis font-semibold' : 'text-ink/70' }}">{{ $log->suhu_pagi ?? '—' }} / {{ $log->suhu_sore ?? '—' }}</td>
                                 <td class="px-4 py-2 font-mono {{ $salinitasBad ? 'text-kritis font-semibold' : 'text-ink/70' }}">{{ $log->salinitas ?? '—' }}</td>
-                                <td class="px-4 py-2 font-mono text-ink/70">
-                                    {{ $log->mortalitas !== null ? $growthService->correctedMortality($log->mortalitas) : '—' }}
-                                    @if ($log->mortalitas !== null)
-                                        <span class="text-xs text-ink/40">(obs. {{ $log->mortalitas }})</span>
-                                    @endif
-                                </td>
+                                <td class="px-4 py-2 font-mono text-ink/70">{{ $log->mortalitas ?? '—' }}</td>
                                 <td class="px-4 py-2 text-right">
                                     <a href="{{ route('stockings.daily-logs.edit', [$stocking, $log]) }}" class="text-teal-mid hover:underline">Edit</a>
                                 </td>

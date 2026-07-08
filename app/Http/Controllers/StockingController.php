@@ -52,6 +52,26 @@ class StockingController extends Controller
         $recentDailyLogs = $stocking->dailyLogs()->latest('tgl')->limit(7)->get();
         $samplings = $stocking->samplings()->latest('tgl')->get();
 
+        // Titik grafik MBW/ADG/SR% per sampling (rumus tetap dari GrowthService)
+        $chartTumbuh = null;
+        $urut = $samplings->sortBy('tgl')->values();
+        if ($urut->count() >= 2) {
+            $mbwPts = [];
+            $srPts = [];
+            $adgPts = [];
+            $prev = null;
+            foreach ($urut as $s) {
+                $label = $s->tgl->format('d/m');
+                $mbwPts[] = ['label' => $label, 'value' => (float) $s->mbw];
+                $srPts[] = ['label' => $label, 'value' => $growthService->survivalRate($s->populasi, $stocking->jumlah_tebar)];
+                if ($prev) {
+                    $adgPts[] = ['label' => $label, 'value' => $growthService->adg((float) $s->mbw, (float) $prev->mbw, $prev->tgl->diffInDays($s->tgl))];
+                }
+                $prev = $s;
+            }
+            $chartTumbuh = ['mbw' => $mbwPts, 'sr' => $srPts, 'adg' => $adgPts];
+        }
+
         $latestDailyLog = $recentDailyLogs->first();
         $latestWeeklyLog = $stocking->waterQualityWeeklies()->latest('tgl')->first();
         $waterQualityAlert = ($latestDailyLog && $waterQualityService->hasDailyViolation($latestDailyLog))
@@ -78,6 +98,7 @@ class StockingController extends Controller
             'srDropSharp',
             'recentEmergency',
             'growthService',
+            'chartTumbuh',
         ));
     }
 

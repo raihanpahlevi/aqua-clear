@@ -98,7 +98,7 @@ php artisan test
 ## Aturan Non-Negosiasi (jangan diam-diam diubah)
 
 1. **DOC dihitung dari `tgl_pakan_pertama`, BUKAN dari `tgl_tebar`.** Ini koreksi eksplisit dari Fardan (reviewer 13 Proses Budidaya). Semua field/query yang berbasis DOC (fase pakan, jadwal sampling DOC 30 + tiap 7 hari, ambang flush-out DOC < 30) WAJIB pakai anchor ini.
-2. **Mortalitas harian dikali 2.** Sesuai praktik Excel Aquaclear — karena kanibalisme udang, bangkai sering dimakan sehingga mortalitas asli lebih tinggi dari yang teramati langsung. Jangan "koreksi" jadi ×1 walau kelihatan aneh secara matematis.
+2. **~~Mortalitas harian dikali 2~~ — DICABUT RESMI 2026-07-08** atas instruksi Pak Jubir yang disampaikan client (fase 2). Aturan baru: kematian diinput & ditampilkan **apa adanya (ekor)**, konversi ke kg = **ekor × MBW sampling terakhir** (`GrowthService::mortalitasKg`, keputusan user: pakai MBW terkini yang simpel, bukan MBW per tanggal kematian). `correctedMortality()` sudah dihapus — JANGAN dipasang balik tanpa instruksi eksplisit baru.
 3. **Semua rumus bisnis dihitung di service class backend, TIDAK BOLEH di Blade/view.** Satu sumber kebenaran untuk FCR, SR, biomass, MBW, ADG, size, HPP, dsb. View hanya menampilkan hasil dari service.
 4. **Panen: Vaname saja**, 3 tahap (partial 1, partial 2, total). Windu sudah tidak dibudidayakan — jangan tambahkan opsi jenis udang lain tanpa diminta.
 5. Item yang masih **"asumsi sementara"** (lihat daftar di bawah) harus diikuti dulu sebagai default, TAPI ditandai di kode (komentar singkat merujuk ke bagian ini) dan diberi cara mudah untuk diubah kalau nanti dikonfirmasi berbeda oleh Fardan/Jubir. Jangan pernah mengganti angka/aturan asumsi ini secara diam-diam berdasarkan "tebakan lebih masuk akal".
@@ -149,7 +149,7 @@ Direplikasi dari pola `pos-saas` (`/Users/bebylolita/pos-saas`), tapi **disederh
 - **Size** = 1000 ÷ MBW (ekor/kg)
 - **SR%** = (populasi saat ini ÷ jumlah tebar) × 100
 - **Biomass** = (populasi × MBW) ÷ 1000
-- **Mortalitas harian** = mortalitas teramati × 2
+- **Kematian harian** = ekor apa adanya; kg = ekor × MBW terakhir (aturan ×2 dicabut 2026-07-08, lihat Aturan Non-Negosiasi #2)
 - **HPP/kg** = total biaya operasional kolam ÷ total biomass panen (akumulasi semua tahap panen)
 - **% biaya pakan** = (biaya pakan ÷ total biaya) × 100 (acuan historis 60–68%)
 - **Laba/Rugi per siklus** = total pendapatan panen (semua tahap) − total biaya operasional
@@ -299,6 +299,22 @@ Redesign UI atas permintaan eksplisit user (prompt "Rombak Desain"). Semua token
 - **Font** (Bunny Fonts): `font-display` = Space Grotesk (judul/heading), `font-sans` = Public Sans (body), `font-mono` = JetBrains Mono (SEMUA angka metrik/tanggal/kode — identitas visual "instrumen lapangan").
 - **Aturan**: JANGAN pakai `slate-*`/`teal-600`/`emerald-*`/`rose-*`/`amber-*`/`sky-*` generik lagi, dan JANGAN tulis `dark:*` (dead code — darkMode 'selector' tanpa toggle; seluruh 636 kemunculan lama sudah dihapus 2026-07-08). Kedalaman pakai border 1px + shift background, bukan shadow. `x-badge` menerima tone lama (emerald/amber/rose/sky/slate) sebagai alias ke tone semantik.
 - **Dashboard** = "ruang kontrol": hero biomass + sparkline SVG murni (TANPA JS/Alpine — lihat bug Alpine di atas), Peta Kolam (grid tile per blok, status kritis>perhatian>siap-panen>sehat>idle), Perlu Perhatian, Menuju Panen. Data dari `DashboardService::controlRoomData()` yang WAJIB tetap batch (~13 query, ada test guard `<=15` di `DashboardControlRoomTest`) — jangan tambah query per-kolam.
+
+## Fase 2 — Permintaan Client via Pak Jubir (2026-07-08, branch redesign-ui)
+
+Semua item di bawah adalah TAMBAHAN DI LUAR PRD (fase 2 / change request), diminta client setelah lihat sistem jalan, dikonfirmasi user sebelum dikerjakan:
+
+1. **Aturan mortalitas ×2 DICABUT** (lihat Aturan Non-Negosiasi #2) — `GrowthService::mortalitasKg(ekor, mbw)` gantinya.
+2. **KPI akumulasi siklus** di dashboard: akumulasi pakan (kg), kematian (ekor), kematian (kg = ekor × MBW sampling terakhir, opsi simpel pilihan user).
+3. **Filter dashboard per kolam & per "batch"** — keputusan client: batch = entity `Cycle` yang sudah ada. Saat difilter: volume (biomass/pakan/kematian) dijumlah, rasio (FCR/SR%/DOC) dirata-rata. Param GET `?kolam=&siklus=`.
+4. **Grafik** — komponen `x-line-chart` (SVG murni server-side, TANPA JS/Alpine, garis ambang putus-putus merah): ammonia + rasio vibrio di dashboard (rata-rata mingguan lintas kolam terfilter); MBW/ADG/SR per sampling di Hub Siklus DAN di dashboard saat difilter 1 kolam.
+5. **Menu "Uji Lab"** (`/uji-lab`, read-only semua role): 8 grafik parameter air mingguan per kolam (TAN, ammonia, nitrit, nitrat, rasio V/B, kepadatan vibrio hijau, TOM, alkalinitas), default kolam dengan data terbanyak.
+6. **Modul Gudang bersaldo** (`/gudang`, tulis: `operasional`): tabel `warehouse_items` (master barang, kategori sama dgn inventory_usage) + `warehouse_entries` (barang MASUK). Barang KELUAR otomatis dari `inventory_usage.warehouse_item_id` (kolom baru, nullable) — keputusan user: "nyambung", bukan dobel input. Kalau pemakaian ditautkan ke gudang: nama item/kategori/satuan dipaksa ikut master (`InventoryUsageController::withWarehouseDefaults`), field item jadi `required_without:warehouse_item_id`. Saldo bisa MINUS (pemakaian > stok tercatat) — sengaja ditampilkan merah, bukan diblokir, karena stok awal mungkin belum diinput. Rumus saldo di `WarehouseService`.
+7. **Warna primer digeser ke BIRU LAUT** (permintaan client "biru", user pilih biru laut bukan biru langit): `teal-deep` → #12303F, `teal-mid` → #2D6480, `ink` → #161D23. NAMA token `teal-*` sengaja TIDAK di-rename (60+ view memakainya) — anggap "teal" = slot warna primer.
+
+DemoFarmSeeder ikut diperluas: data uji air mingguan tiap 7 hari per kolam aktif (nilai aman di bawah ambang biar cerita alert tetap dari 4 kolam pelanggaran harian yang disengaja).
+
+Guard query dashboard di `DashboardControlRoomTest` jadi `<=17` (tambah query dropdown siklus & deret mingguan — tetap O(1) berapa pun jumlah kolam, JANGAN tambah query per-kolam).
 
 ## Rencana Build 14 Hari
 

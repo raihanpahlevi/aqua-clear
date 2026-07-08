@@ -106,7 +106,7 @@ Dari Hub Siklus A1 → "Pakan & Kualitas Air Harian" → Input Hari Ini:
 | Suhu Pagi | **35** | di luar 28–32 → alert Suhu |
 | Suhu Sore | 30 | normal |
 | Salinitas | **20** | di luar 25–30 → alert Salinitas |
-| Mortalitas | 15 | dikali 2 di background = 30, cek di halaman Edit entri ini |
+| Mortalitas | 15 | ~~dikali 2~~ (DICABUT 2026-07-08: tampil apa adanya, kg = ekor × MBW) di background = 30, cek di halaman Edit entri ini |
 
 **Hasil yang diharapkan**: DO, pH Pagi, Suhu Pagi, Salinitas tampil **merah** di tabel. Balik ke Hub Siklus A1 → muncul 2 banner merah: "2x berturut-turut hasil ancho sisa banyak" DAN "ada parameter kualitas air di luar standar mutu".
 

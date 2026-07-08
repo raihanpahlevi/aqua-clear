@@ -22,6 +22,33 @@
 
     <div class="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
+        {{-- === FILTER KOLAM / BATCH (SIKLUS) === --}}
+        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-end gap-3">
+            <div>
+                <label for="kolam" class="block text-[11px] font-semibold text-ink/50 uppercase tracking-wider mb-1">Kolam</label>
+                <select id="kolam" name="kolam" class="border-lumpur/40 bg-paper text-ink text-sm focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm py-1.5">
+                    <option value="">Semua kolam</option>
+                    @foreach ($filter['ponds'] as $p)
+                        <option value="{{ $p['id'] }}" @selected($filter['pondId'] === $p['id'])>{{ $p['kode'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="siklus" class="block text-[11px] font-semibold text-ink/50 uppercase tracking-wider mb-1">Batch / Siklus</label>
+                <select id="siklus" name="siklus" class="border-lumpur/40 bg-paper text-ink text-sm focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm py-1.5">
+                    <option value="">Semua siklus</option>
+                    @foreach ($filter['cycles'] as $c)
+                        <option value="{{ $c->id }}" @selected($filter['cycleId'] === $c->id)>{{ $c->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="inline-flex items-center px-4 py-2 bg-teal-mid rounded-lg font-semibold text-xs text-paper uppercase tracking-wide hover:bg-teal-deep focus:outline-none focus:ring-2 focus:ring-teal-mid focus:ring-offset-2">Terapkan</button>
+            @if ($filter['pondId'] || $filter['cycleId'])
+                <a href="{{ route('dashboard') }}" class="text-sm text-ink/50 hover:text-teal-mid py-2">Reset</a>
+                <span class="text-xs text-ink/40 py-2">Saat difilter: biomass/pakan/kematian dijumlah, FCR/SR%/DOC dirata-rata.</span>
+            @endif
+        </form>
+
         {{-- === HERO === --}}
         <x-card>
             <div class="flex flex-col md:flex-row md:items-center gap-6">
@@ -122,6 +149,41 @@
                 </div>
             </div>
         </x-card>
+
+        {{-- === KPI AKUMULASI SIKLUS BERJALAN (permintaan client fase 2) === --}}
+        <x-card :padded="false" class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-lumpur/15">
+            <div class="px-5 py-3.5">
+                <div class="text-[11px] font-semibold text-ink/50 uppercase tracking-wider">Akumulasi Pakan Siklus</div>
+                <div class="font-mono font-semibold text-lg text-ink mt-0.5">{{ number_format($akumulasi['pakan'], 1, ',', '.') }} kg</div>
+            </div>
+            <div class="px-5 py-3.5">
+                <div class="text-[11px] font-semibold text-ink/50 uppercase tracking-wider">Akumulasi Kematian (ekor)</div>
+                <div class="font-mono font-semibold text-lg text-ink mt-0.5">{{ number_format($akumulasi['matiEkor'], 0, ',', '.') }}</div>
+            </div>
+            <div class="px-5 py-3.5">
+                <div class="text-[11px] font-semibold text-ink/50 uppercase tracking-wider">Akumulasi Kematian (kg)</div>
+                <div class="font-mono font-semibold text-lg text-ink mt-0.5">{{ number_format($akumulasi['matiKg'], 1, ',', '.') }} kg</div>
+                <div class="text-[10px] text-ink/40 mt-0.5">ekor × MBW sampling terakhir</div>
+            </div>
+        </x-card>
+
+        {{-- === GRAFIK AIR MINGGUAN (ammonia & vibrio wajib di dashboard — permintaan client) === --}}
+        <div class="grid sm:grid-cols-2 gap-4">
+            <x-line-chart title="Ammonia (rata-rata mingguan)" :points="$chartAir['ammonia']" :threshold="0.1" unit="ppm" :decimals="3" />
+            <x-line-chart title="Rasio Vibrio/Bakteri (rata-rata mingguan)" :points="$chartAir['vibrio']" :threshold="10" threshold-label="10%" unit="%" :decimals="1" />
+        </div>
+
+        {{-- === GRAFIK PERTUMBUHAN — muncul saat difilter 1 kolam aktif === --}}
+        @if ($chartTumbuh)
+            <div>
+                <div class="font-display font-semibold text-ink text-sm mb-3">Pertumbuhan Kolam {{ $chartTumbuh['kolam'] }} <span class="text-ink/40 font-sans font-normal text-xs">— dihitung tiap sampling (7 hari sekali setelah DOC 30)</span></div>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    <x-line-chart title="MBW" :points="$chartTumbuh['mbw']" unit="gr" :decimals="2" />
+                    <x-line-chart title="ADG" :points="$chartTumbuh['adg']" unit="gr/hari" :decimals="3" />
+                    <x-line-chart title="SR%" :points="$chartTumbuh['sr']" unit="%" :decimals="1" />
+                </div>
+            </div>
+        @endif
 
         {{-- === PERLU PERHATIAN + MENUJU PANEN === --}}
         <div class="grid lg:grid-cols-2 gap-4 items-start">

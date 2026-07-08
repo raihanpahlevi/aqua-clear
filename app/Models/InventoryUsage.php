@@ -11,6 +11,7 @@ class InventoryUsage extends Model
 
     protected $fillable = [
         'stocking_id',
+        'warehouse_item_id',
         'tgl',
         'kategori',
         'item',
@@ -29,5 +30,10 @@ class InventoryUsage extends Model
     public function stocking(): BelongsTo
     {
         return $this->belongsTo(Stocking::class);
+    }
+
+    public function warehouseItem(): BelongsTo
+    {
+        return $this->belongsTo(WarehouseItem::class);
     }
 }

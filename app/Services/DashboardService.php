@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Cycle;
 use App\Models\DailyLog;
 use App\Models\EmergencyLog;
 use App\Models\Harvest;
@@ -11,6 +12,7 @@ use App\Models\Sampling;
 use App\Models\Stocking;
 use App\Models\WaterQualityWeekly;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -159,25 +161,35 @@ class DashboardService
      * Semua rumus tetap dari service masing-masing (Growth/Feed/Doc/WaterQuality);
      * method ini cuma mem-batch pengambilan datanya.
      */
-    public function controlRoomData(int $farmId): array
+    public function controlRoomData(int $farmId, ?int $pondId = null, ?int $cycleId = null): array
     {
         $today = now();
 
-        // 1 query — semua kolam + blok
+        // 1 query — semua kolam + blok (selalu semua, buat dropdown filter)
         $ponds = Pond::with('block')
             ->whereHas('block', fn ($q) => $q->where('farm_id', $farmId))
             ->orderBy('kode_kolam')
             ->get();
 
-        $activePondIds = $ponds->where('status', 'aktif')->pluck('id');
+        // Filter tampilan: per kolam dan/atau per batch (= Siklus, keputusan client 2026-07-08)
+        $tilePonds = $pondId ? $ponds->where('id', $pondId) : $ponds;
 
-        // 1 query — stocking terbaru per kolam aktif
+        $activePondIds = $tilePonds->where('status', 'aktif')->pluck('id');
+
+        // 1 query — stocking terbaru per kolam aktif (dibatasi siklus bila difilter)
         $stockings = Stocking::whereIn('pond_id', $activePondIds)
+            ->when($cycleId, fn ($q) => $q->where('cycle_id', $cycleId))
             ->orderByDesc('tgl_tebar')
             ->orderByDesc('id')
             ->get()
             ->unique('pond_id')
             ->values();
+
+        // Saat filter siklus aktif, kolam tanpa stocking di siklus itu disembunyikan dari peta
+        if ($cycleId) {
+            $pondIdsInCycle = $stockings->pluck('pond_id')->all();
+            $tilePonds = $tilePonds->filter(fn (Pond $p) => in_array($p->id, $pondIdsInCycle, true));
+        }
 
         $stockingIds = $stockings->pluck('id');
         $stockingByPond = $stockings->keyBy('pond_id');
@@ -189,9 +201,15 @@ class DashboardService
             ->get()
             ->groupBy('stocking_id');
 
-        // 2 query — log harian & uji mingguan TERBARU per stocking
+        // 1 query — log harian TERBARU per stocking
         $latestDailyLogs = $this->latestPerStocking(DailyLog::query(), 'daily_logs', $stockingIds);
-        $latestWeeklies = $this->latestPerStocking(WaterQualityWeekly::query(), 'water_quality_weekly', $stockingIds);
+
+        // 1 query — SEMUA uji mingguan stocking terpilih (terbaru per stocking + deret grafik air)
+        $weekliesByStocking = WaterQualityWeekly::whereIn('stocking_id', $stockingIds)
+            ->orderByDesc('tgl')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('stocking_id');
 
         // 1 query — emergency 7 hari terakhir (<=3 hari → status kritis, <=7 hari → flush-out)
         $emergenciesByStocking = EmergencyLog::whereIn('stocking_id', $stockingIds)
@@ -199,14 +217,15 @@ class DashboardService
             ->get()
             ->groupBy('stocking_id');
 
-        // 1 query — akumulasi pakan per stocking (FCR)
-        $pakanPerStocking = DailyLog::whereIn('stocking_id', $stockingIds)
-            ->selectRaw('stocking_id, COALESCE(SUM(pakan_07_kg),0) + COALESCE(SUM(pakan_11_kg),0) + COALESCE(SUM(pakan_15_kg),0) + COALESCE(SUM(pakan_19_kg),0) as total')
+        // 1 query — akumulasi pakan + kematian (ekor) per stocking, satu agregat
+        $akumulasiPerStocking = DailyLog::whereIn('stocking_id', $stockingIds)
+            ->selectRaw('stocking_id, COALESCE(SUM(pakan_07_kg),0) + COALESCE(SUM(pakan_11_kg),0) + COALESCE(SUM(pakan_15_kg),0) + COALESCE(SUM(pakan_19_kg),0) as total_pakan, COALESCE(SUM(mortalitas),0) as total_mati')
             ->groupBy('stocking_id')
-            ->pluck('total', 'stocking_id');
+            ->get()
+            ->keyBy('stocking_id');
 
         // === Status per kolam (murni PHP, tanpa query tambahan) ===
-        $tiles = $ponds->map(function (Pond $pond) use ($stockingByPond, $samplingsByStocking, $latestDailyLogs, $latestWeeklies, $emergenciesByStocking, $today) {
+        $tiles = $tilePonds->values()->map(function (Pond $pond) use ($stockingByPond, $samplingsByStocking, $latestDailyLogs, $weekliesByStocking, $emergenciesByStocking, $today) {
             $stocking = $pond->status === 'aktif' ? $stockingByPond->get($pond->id) : null;
 
             if (! $stocking) {
@@ -230,7 +249,7 @@ class DashboardService
             $prevSampling = $samplings->skip(1)->first();
 
             $latestDaily = $latestDailyLogs->get($stocking->id);
-            $latestWeekly = $latestWeeklies->get($stocking->id);
+            $latestWeekly = $weekliesByStocking->get($stocking->id)?->first();
             $violations = array_merge(
                 $latestDaily ? $this->waterQualityService->dailyViolations($latestDaily) : [],
                 $latestWeekly ? $this->waterQualityService->weeklyViolations($latestWeekly) : [],
@@ -289,13 +308,27 @@ class DashboardService
             ->sortKeys();
 
         // === Metrik sekunder ===
-        $fcrs = $activeTiles->map(function (array $t) use ($pakanPerStocking) {
+        $fcrs = $activeTiles->map(function (array $t) use ($akumulasiPerStocking) {
             $biomass = $t['latestSampling']
                 ? $this->growthService->biomassKg($t['latestSampling']->populasi, (float) $t['latestSampling']->mbw)
                 : null;
 
-            return $this->feedService->fcr((float) ($pakanPerStocking[$t['stocking']->id] ?? 0), $biomass);
+            return $this->feedService->fcr((float) ($akumulasiPerStocking[$t['stocking']->id]->total_pakan ?? 0), $biomass);
         })->filter(fn ($f) => $f !== null);
+
+        // === KPI akumulasi siklus berjalan (permintaan client 2026-07-08) ===
+        // Kematian kg = ekor × MBW sampling TERAKHIR (opsi simpel, keputusan user).
+        $akumulasi = ['pakan' => 0.0, 'matiEkor' => 0, 'matiKg' => 0.0];
+        foreach ($activeTiles as $t) {
+            $row = $akumulasiPerStocking->get($t['stocking']->id);
+            if (! $row) {
+                continue;
+            }
+            $akumulasi['pakan'] += (float) $row->total_pakan;
+            $akumulasi['matiEkor'] += (int) $row->total_mati;
+            $mbw = $t['latestSampling'] ? (float) $t['latestSampling']->mbw : null;
+            $akumulasi['matiKg'] += $this->growthService->mortalitasKg((int) $row->total_mati, $mbw) ?? 0.0;
+        }
 
         // 2 query — pakan bulan berjalan (kg dari daily_logs, Rp dari pembelian inventory)
         $pakanKg = (float) DailyLog::whereIn('stocking_id', $stockingIds)
@@ -358,13 +391,47 @@ class DashboardService
             ->sortByDesc('mbw')
             ->values();
 
+        // === Grafik air mingguan agregat: ammonia & rasio vibrio (rata-rata kolam terfilter) ===
+        $weeklyRows = $weekliesByStocking->flatten(1);
+        $chartAir = [
+            'ammonia' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $w->ammonia !== null ? (float) $w->ammonia : null),
+            'vibrio' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $this->waterQualityService->vibrioRatioPercent($w)),
+        ];
+
+        // === Grafik pertumbuhan (MBW/ADG/SR) — hanya saat filter satu kolam aktif ===
+        $chartTumbuh = null;
+        if ($pondId && $activeTiles->count() === 1) {
+            $t = $activeTiles->first();
+            $urut = $samplingsByStocking->get($t['stocking']->id, collect())->sortBy('tgl')->values();
+            if ($urut->count() >= 2) {
+                $mbwPts = [];
+                $srPts = [];
+                $adgPts = [];
+                $prev = null;
+                foreach ($urut as $s) {
+                    $label = $s->tgl->format('d/m');
+                    $mbwPts[] = ['label' => $label, 'value' => (float) $s->mbw];
+                    $srPts[] = ['label' => $label, 'value' => $this->growthService->survivalRate($s->populasi, $t['stocking']->jumlah_tebar)];
+                    if ($prev) {
+                        $hari = $prev->tgl->diffInDays($s->tgl);
+                        $adgPts[] = ['label' => $label, 'value' => $this->growthService->adg((float) $s->mbw, (float) $prev->mbw, $hari)];
+                    }
+                    $prev = $s;
+                }
+                $chartTumbuh = ['mbw' => $mbwPts, 'sr' => $srPts, 'adg' => $adgPts, 'kolam' => $t['pond']->kode_kolam];
+            }
+        }
+
+        // 1 query — daftar siklus buat dropdown filter
+        $cycles = Cycle::orderBy('nama')->get(['id', 'nama']);
+
         return [
             'hero' => [
                 'totalBiomass' => $totalBiomass,
                 'avgSr' => $avgSr,
                 'avgDoc' => $avgDoc,
-                'kolamAktif' => $ponds->where('status', 'aktif')->count(),
-                'kolamTotal' => $ponds->count(),
+                'kolamAktif' => $tilePonds->where('status', 'aktif')->count(),
+                'kolamTotal' => $tilePonds->count(),
             ],
             'sparkline' => [
                 'values' => $trend->values()->all(),
@@ -376,10 +443,43 @@ class DashboardService
                 'pakanBulanIni' => ['kg' => $pakanKg, 'rp' => $pakanRp],
                 'labaRugi' => $labaRugi,
             ],
+            'akumulasi' => $akumulasi,
+            'chartAir' => $chartAir,
+            'chartTumbuh' => $chartTumbuh,
+            'filter' => [
+                'pondId' => $pondId,
+                'cycleId' => $cycleId,
+                'ponds' => $ponds->map(fn (Pond $p) => ['id' => $p->id, 'kode' => $p->kode_kolam])->values(),
+                'cycles' => $cycles,
+            ],
             'perluPerhatian' => $perluPerhatian->sortBy('prioritas')->values(),
             'menujuPanen' => $menujuPanen,
             'aktivitasTerbaru' => $this->aktivitasRingkas($farmId, 6),
         ];
+    }
+
+    /**
+     * Deret mingguan rata-rata lintas kolam untuk satu parameter air —
+     * dikelompokkan per tanggal uji, maksimal 12 titik terakhir.
+     *
+     * @param  callable(WaterQualityWeekly): ?float  $ambilNilai
+     * @return list<array{label: string, value: float}>
+     */
+    private function weeklySeries(Collection $weeklyRows, callable $ambilNilai): array
+    {
+        return $weeklyRows
+            ->map(fn (WaterQualityWeekly $w) => ['tgl' => $w->tgl, 'nilai' => $ambilNilai($w)])
+            ->filter(fn (array $r) => $r['nilai'] !== null)
+            ->groupBy(fn (array $r) => $r['tgl']->format('Y-m-d'))
+            ->sortKeys()
+            ->map(fn (Collection $group, string $tgl) => [
+                'label' => Carbon::parse($tgl)->format('d/m'),
+                'value' => round($group->avg('nilai'), 3),
+            ])
+            ->values()
+            ->slice(-12)
+            ->values()
+            ->all();
     }
 
     /**

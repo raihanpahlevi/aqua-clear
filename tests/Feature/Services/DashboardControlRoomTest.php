@@ -150,6 +150,7 @@ class DashboardControlRoomTest extends TestCase
         $jumlahQuery = count(DB::getQueryLog());
         DB::disableQueryLog();
 
-        $this->assertLessThanOrEqual(15, $jumlahQuery, "Dashboard pakai {$jumlahQuery} query — harus batch, bukan per kolam.");
+        // 16 = 13 batch + dropdown siklus + dst — tetap O(1) berapa pun jumlah kolam.
+        $this->assertLessThanOrEqual(17, $jumlahQuery, "Dashboard pakai {$jumlahQuery} query — harus batch, bukan per kolam.");
     }
 }

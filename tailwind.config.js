@@ -21,9 +21,12 @@ export default {
                 mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
             },
             colors: {
-                ink: '#17211D',
-                'teal-deep': '#143C36',
-                'teal-mid': '#2B6357',
+                // Primer digeser ke BIRU LAUT (permintaan client 2026-07-08, approve user).
+                // Nama token "teal-*" sengaja dipertahankan supaya 60+ view tidak perlu diubah —
+                // anggap "teal" = warna primer, nilainya sekarang biru laut.
+                ink: '#161D23',
+                'teal-deep': '#12303F',
+                'teal-mid': '#2D6480',
                 paper: '#FAF7F0',
                 sand: '#E4D9BE',
                 lumpur: '#7C6B4F',

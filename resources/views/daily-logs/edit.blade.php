@@ -14,8 +14,8 @@
                     <div class="text-xl font-semibold text-ink">{{ $fr !== null ? number_format($fr, 2).'%' : '—' }}</div>
                 </div>
                 <div class="bg-sand/40 p-4 rounded-2xl border border-lumpur/20">
-                    <div class="text-xs text-ink/50 uppercase">Mortalitas Terkoreksi (×2)</div>
-                    <div class="text-xl font-semibold text-ink">{{ $correctedMortality ?? '—' }}</div>
+                    <div class="text-xs text-ink/50 uppercase">Kematian (kg, ekor × MBW)</div>
+                    <div class="font-mono text-xl font-semibold text-ink">{{ $kematianKg !== null ? number_format($kematianKg, 2, ',', '.').' kg' : '—' }}</div>
                 </div>
                 <div class="bg-sand/40 p-4 rounded-2xl border border-lumpur/20">
                     <div class="text-xs text-ink/50 uppercase">Porsi Ancho (2% total pakan)</div>

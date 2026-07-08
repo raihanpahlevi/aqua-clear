@@ -11,6 +11,7 @@ use App\Models\InventoryUsage;
 use App\Models\Pond;
 use App\Models\Sampling;
 use App\Models\Stocking;
+use App\Models\WaterQualityWeekly;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -227,6 +228,33 @@ class DemoFarmSeeder extends Seeder
         DailyLog::insert($logs);
         $ringkas['dailyLog'] += count($logs);
         $ringkas['aktif']++;
+
+        // ── Uji air mingguan (lab) tiap 7 hari sejak DOC 7 → grafik ammonia/vibrio & menu Uji Lab ──
+        $weeklies = [];
+        for ($d = 7; $d <= $doc; $d += 7) {
+            $tgl = $tglPakan->copy()->addDays($d);
+            $totalBakteri = 80 + $this->rand(0, 60);
+            $weeklies[] = [
+                'stocking_id' => $stocking->id,
+                'tgl' => $tgl->toDateString(),
+                'tan' => round(0.4 + $this->rand(0, 110) / 100, 2),          // aman < ambang 2
+                'ammonia' => round((2 + $this->rand(0, 6)) / 100, 3),          // aman < ambang 0,1
+                'nitrit' => round((2 + $this->rand(0, 6)) / 100, 3),
+                'nitrat' => round(10 + $this->rand(0, 28) + $d / 8, 1),
+                'tom' => round(3 + $this->rand(0, 50) / 10, 1),
+                'alkalinitas' => 95 + $this->rand(0, 45),
+                'fe' => round($this->rand(1, 8) / 10, 2),
+                'vibrio_hijau' => $this->rand(1, 7),
+                'vibrio_hitam' => $this->rand(0, 3),
+                'vibrio_luminer' => 0,
+                'total_bakteri' => $totalBakteri,
+                'created_at' => $tgl->copy()->setTime(11, 0),
+                'updated_at' => $tgl->copy()->setTime(11, 0),
+            ];
+        }
+        if ($weeklies !== []) {
+            WaterQualityWeekly::insert($weeklies);
+        }
 
         // ── Emergency ≤3 hari terakhir buat 2 kolam → tile kritis ──
         if (in_array($kode, self::EMERGENCY_PONDS, true)) {

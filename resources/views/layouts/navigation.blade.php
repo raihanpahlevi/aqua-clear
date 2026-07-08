@@ -3,6 +3,8 @@
         ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
         ['route' => 'ponds.index', 'pattern' => 'ponds.*', 'icon' => 'pond', 'label' => 'Data Kolam'],
         ['route' => 'cycles.index', 'pattern' => 'cycles.*', 'icon' => 'cycle', 'label' => 'Siklus'],
+        ['route' => 'uji-lab.index', 'pattern' => 'uji-lab.*', 'icon' => 'flask', 'label' => 'Uji Lab'],
+        ['route' => 'gudang.index', 'pattern' => 'gudang.*', 'icon' => 'gudang', 'label' => 'Gudang'],
         ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'report', 'label' => 'Laporan'],
     ];
 @endphp

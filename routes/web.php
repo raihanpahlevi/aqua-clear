@@ -4,6 +4,7 @@ use App\Http\Controllers\CycleController;
 use App\Http\Controllers\DailyLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmergencyLogController;
+use App\Http\Controllers\GudangController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InventoryUsageController;
 use App\Http\Controllers\PondController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SamplingController;
 use App\Http\Controllers\StockingController;
+use App\Http\Controllers\UjiLabController;
 use App\Http\Controllers\WaterQualityWeeklyController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +58,21 @@ Route::middleware('auth')->group(function () {
 
     // Laporan — ringkasan biaya/pendapatan lintas semua kolam, read-only, semua role bisa lihat
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // Uji Lab (fase 2) — grafik parameter air mingguan per kolam, read-only, semua role bisa lihat
+    Route::get('uji-lab', [UjiLabController::class, 'index'])->name('uji-lab.index');
+
+    // Gudang (fase 2) — master barang + barang masuk + saldo; keluar otomatis dari pemakaian tertaut.
+    // Rute statis (barang/create, masuk/create) HARUS sebelum rute dinamis {item}.
+    Route::get('gudang', [GudangController::class, 'index'])->name('gudang.index');
+    Route::middleware('role:operasional')->group(function () {
+        Route::get('gudang/barang/create', [GudangController::class, 'createItem'])->name('gudang.item.create');
+        Route::post('gudang/barang', [GudangController::class, 'storeItem'])->name('gudang.item.store');
+        Route::get('gudang/masuk/create', [GudangController::class, 'createEntry'])->name('gudang.entry.create');
+        Route::post('gudang/masuk', [GudangController::class, 'storeEntry'])->name('gudang.entry.store');
+        Route::get('gudang/barang/{item}/edit', [GudangController::class, 'editItem'])->name('gudang.item.edit');
+        Route::put('gudang/barang/{item}', [GudangController::class, 'updateItem'])->name('gudang.item.update');
+    });
 
     // Siklus (nama batch) — kelola oleh Owner + Operasional, semua role bisa lihat
     Route::get('cycles', [CycleController::class, 'index'])->name('cycles.index');

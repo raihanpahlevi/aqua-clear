@@ -73,9 +73,9 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-        <x-input-label for="mortalitas" value="Mortalitas Observasi (ekor)" />
+        <x-input-label for="mortalitas" value="Kematian (ekor)" />
         <x-text-input id="mortalitas" name="mortalitas" type="number" class="mt-1 block w-full" :value="$old('mortalitas')" />
-        <p class="text-xs text-ink/50 mt-1">Sistem otomatis kali 2 untuk laporan (kanibalisme udang).</p>
+        <p class="text-xs text-ink/50 mt-1">Input jumlah ekor mati apa adanya — konversi ke kg otomatis (ekor × MBW).</p>
     </div>
     <div>
         <x-input-label for="catatan" value="Catatan" />

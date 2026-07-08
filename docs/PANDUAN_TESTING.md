@@ -108,7 +108,7 @@ Emergency & Kesehatan
 **🔗 Efek Domino — cek semua ini**:
 - Balik ke **Hub Siklus** → harusnya muncul **banner alert merah** ("2x berturut-turut sisa banyak") karena kamu isi ancho 2 sesi jadi "Sisa Banyak".
 - Kartu **FCR** di Hub Siklus: kalau BELUM ada data Sampling sama sekali, FCR bakal tampil **"—"** (bukan 0.00) — ini normal, FCR baru bisa dihitung setelah ada Biomass dari Sampling.
-- Mortalitas yang kamu isi (10) TIDAK langsung ngurangin kartu "SR%" atau "Biomass" — dua kartu itu cuma berubah kalau kamu input **Sampling** baru dengan angka populasi yang sudah disesuaikan manual. Mortalitas di sini cuma buat pencatatan/laporan (dikali 2 di belakang layar = 20).
+- Mortalitas yang kamu isi (10) TIDAK langsung ngurangin kartu "SR%" atau "Biomass" — dua kartu itu cuma berubah kalau kamu input **Sampling** baru dengan angka populasi yang sudah disesuaikan manual. Mortalitas di sini cuma buat pencatatan/laporan (~~dikali 2~~ (DICABUT 2026-07-08: tampil apa adanya, kg = ekor × MBW) di belakang layar = 20).
 - Kg pakan yang kamu isi di sini bakal nambah ke KPI Dashboard **"Pakan Bulan Ini"** bagian **kg** — TAPI bagian **Rp**-nya TETAP 0 sampai kamu isi pembelian pakan di modul **Aplikasi Kimia & Biologi** (dua sumber data beda, lihat langkah I).
 - Coba login sebagai `lab` → buka halaman ini → harusnya diblokir (403) kalau coba akses form input.
 
@@ -295,7 +295,7 @@ Ini rekap SEMUA kondisi otomatis/validasi yang ada di kode, per modul, lengkap d
 | Banner "Kualitas Air" di Hub Siklus | Input HARIAN PALING BARU (bukan riwayat lama) kena salah satu alert di atas | Banner merah muncul di Hub Siklus |
 | Input DITOLAK (duplikat tanggal) | Tanggal yang sama diinput 2x untuk siklus yang sama | Error validasi |
 | FCR tampil "—" | Belum ada Sampling sama sekali (biomass belum ada) ATAU akumulasi pakan masih 0 | FCR "—", bukan "0.00" |
-| Mortalitas dikali 2 | Isi field Mortalitas berapa pun (mis. 10) | Nilai terkoreksi (20) muncul di halaman Edit entri itu, dipakai di laporan — TAPI TIDAK otomatis ngurangin Populasi/SR% |
+| Mortalitas ~~dikali 2~~ (DICABUT 2026-07-08: tampil apa adanya, kg = ekor × MBW) | Isi field Mortalitas berapa pun (mis. 10) | Nilai terkoreksi (20) muncul di halaman Edit entri itu, dipakai di laporan — TAPI TIDAK otomatis ngurangin Populasi/SR% |
 
 ### 7.5 Manajemen Dasar Tambak
 

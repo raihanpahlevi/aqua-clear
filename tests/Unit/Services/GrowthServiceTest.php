@@ -45,8 +45,10 @@ class GrowthServiceTest extends TestCase
         $this->assertEqualsWithDelta(825.0, $this->service->biomassKg(55000, 15), 0.001);
     }
 
-    public function test_mortalitas_dikali_dua(): void
+    public function test_mortalitas_kg_dari_ekor_kali_mbw(): void
     {
-        $this->assertSame(20, $this->service->correctedMortality(10));
+        // Aturan ×2 dihapus per instruksi Jubir via client (2026-07-08) — konversi kg murni ekor × MBW.
+        $this->assertSame(1.5, $this->service->mortalitasKg(100, 15.0));
+        $this->assertNull($this->service->mortalitasKg(100, null));
     }
 }

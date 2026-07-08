@@ -42,7 +42,10 @@ class DailyLogController extends Controller
         $totalPakanHarian = $feedService->totalPakanHarianKg($dailyLog);
         $biomassKg = $growthService->latestBiomassKg($stocking);
         $fr = $feedService->fr($totalPakanHarian, $biomassKg);
-        $correctedMortality = $dailyLog->mortalitas !== null ? $growthService->correctedMortality($dailyLog->mortalitas) : null;
+        $latestSampling = $growthService->latestSampling($stocking);
+        $kematianKg = $dailyLog->mortalitas !== null
+            ? $growthService->mortalitasKg($dailyLog->mortalitas, $latestSampling ? (float) $latestSampling->mbw : null)
+            : null;
         $anchoPortionKg = $feedService->anchoPortionKg($totalPakanHarian);
 
         return view('daily-logs.edit', compact(
@@ -50,7 +53,7 @@ class DailyLogController extends Controller
             'dailyLog',
             'totalPakanHarian',
             'fr',
-            'correctedMortality',
+            'kematianKg',
             'anchoPortionKg',
         ));
     }

@@ -36,11 +36,17 @@ class GrowthService
     }
 
     /**
-     * Mortalitas harian dikali 2 — kanibalisme udang, lihat CLAUDE.md.
+     * Konversi kematian ekor → kg pakai MBW (gr). Aturan lama "×2 kanibalisme"
+     * DIHAPUS atas instruksi Pak Jubir via client (2026-07-08) — kematian dicatat
+     * apa adanya, kg = ekor × MBW sampling terakhir. Lihat CLAUDE.md.
      */
-    public function correctedMortality(int $mortalitasObservasi): int
+    public function mortalitasKg(int $ekor, ?float $mbwGram): ?float
     {
-        return $mortalitasObservasi * 2;
+        if ($mbwGram === null || $mbwGram <= 0) {
+            return null;
+        }
+
+        return $ekor * $mbwGram / 1000;
     }
 
     public function latestSampling(Stocking $stocking)

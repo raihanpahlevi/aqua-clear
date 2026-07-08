@@ -12,6 +12,7 @@ $paths = [
     'harvest' => '<path d="M3 8l9-4 9 4-9 4-9-4z" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8v9l9 4 9-4V8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12v9" stroke-linecap="round"/>',
     'alert' => '<path d="M12 3l10 18H2L12 3z" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="10" x2="12" y2="13.5" stroke-linecap="round"/><circle cx="12" cy="16.5" r="0.75" fill="currentColor" stroke="none"/>',
     'report' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="9" x2="6" y2="9.01" stroke-linecap="round" stroke-width="2.2"/><line x1="18" y1="15" x2="18" y2="15.01" stroke-linecap="round" stroke-width="2.2"/>',
+    'gudang' => '<path d="M3 9l9-5 9 5v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 21v-7h8v7" stroke-linecap="round" stroke-linejoin="round"/><line x1="8" y1="17" x2="16" y2="17" stroke-linecap="round"/>',
     'plus' => '<line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"/>',
     'menu' => '<line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-linecap="round"/>',
     'close' => '<line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>',

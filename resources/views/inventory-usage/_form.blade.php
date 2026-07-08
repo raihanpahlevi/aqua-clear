@@ -9,6 +9,20 @@
 </div>
 
 <div>
+    <x-input-label for="warehouse_item_id" value="Ambil dari Gudang (opsional)" />
+    <select id="warehouse_item_id" name="warehouse_item_id" class="mt-1 block w-full border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
+        <option value="">— tidak dari gudang —</option>
+        @foreach ($warehouseItems as $w)
+            <option value="{{ $w['item']->id }}" @selected($old('warehouse_item_id') == $w['item']->id)>
+                {{ $w['item']->nama }} — saldo {{ number_format($w['saldo'], 1, ',', '.') }} {{ $w['item']->satuan }}
+            </option>
+        @endforeach
+    </select>
+    <p class="text-xs text-ink/50 mt-1">Kalau dipilih: saldo gudang otomatis berkurang, dan nama item + kategori ikut barang gudang (isian di bawah boleh dikosongkan).</p>
+    <x-input-error :messages="$errors->get('warehouse_item_id')" class="mt-2" />
+</div>
+
+<div>
     <x-input-label for="kategori" value="Kategori" />
     <select id="kategori" name="kategori" required class="mt-1 block w-full max-w-xs border-lumpur/40 bg-paper text-ink focus:border-teal-mid focus:ring-teal-mid rounded-lg shadow-sm">
         @foreach (['pakan', 'probiotik', 'mineral', 'desinfektan', 'obat'] as $kategori)
@@ -19,8 +33,8 @@
 </div>
 
 <div>
-    <x-input-label for="item" value="Nama Item" />
-    <x-text-input id="item" name="item" type="text" class="mt-1 block w-full" :value="$old('item')" required placeholder="mis. Pakan 3M, Probiotik X" />
+    <x-input-label for="item" value="Nama Item (wajib kalau tidak ambil dari gudang)" />
+    <x-text-input id="item" name="item" type="text" class="mt-1 block w-full" :value="$old('item')" placeholder="mis. Pakan 3M, Probiotik X" />
     <x-input-error :messages="$errors->get('item')" class="mt-2" />
 </div>
 
