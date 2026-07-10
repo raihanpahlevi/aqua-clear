@@ -167,16 +167,13 @@
             </div>
         </x-card>
 
-        {{-- === GRAFIK AIR MINGGUAN (ammonia & vibrio wajib di dashboard — permintaan client) === --}}
-        <div class="grid sm:grid-cols-2 gap-4">
-            <x-line-chart title="Ammonia (rata-rata mingguan)" :points="$chartAir['ammonia']" :threshold="0.1" unit="ppm" :decimals="3" />
-            <x-line-chart title="Rasio Vibrio/Bakteri (rata-rata mingguan)" :points="$chartAir['vibrio']" :threshold="10" threshold-label="10%" unit="%" :decimals="1" />
-        </div>
-
-        {{-- === GRAFIK PERTUMBUHAN — muncul saat difilter 1 kolam aktif === --}}
+        {{-- === GRAFIK PERTUMBUHAN per sampling (selalu tampil — revisi client 2026-07-09) === --}}
         @if ($chartTumbuh)
             <div>
-                <div class="font-display font-semibold text-ink text-sm mb-3">Pertumbuhan Kolam {{ $chartTumbuh['kolam'] }} <span class="text-ink/40 font-sans font-normal text-xs">— dihitung tiap sampling (7 hari sekali setelah DOC 30)</span></div>
+                <div class="font-display font-semibold text-ink text-sm mb-3">
+                    {{ $chartTumbuh['kolam'] ? 'Pertumbuhan Kolam '.$chartTumbuh['kolam'] : 'Tren Pertumbuhan (rata-rata kolam terfilter)' }}
+                    <span class="text-ink/40 font-sans font-normal text-xs">— dihitung tiap sampling (7 hari sekali setelah DOC 30)</span>
+                </div>
                 <div class="grid sm:grid-cols-3 gap-4">
                     <x-line-chart title="MBW" :points="$chartTumbuh['mbw']" unit="gr" :decimals="2" />
                     <x-line-chart title="ADG" :points="$chartTumbuh['adg']" unit="gr/hari" :decimals="3" />
@@ -184,6 +181,14 @@
                 </div>
             </div>
         @endif
+
+        {{-- === GRAFIK AIR MINGGUAN (vibrio hijau, TAN, ammonia di dashboard — revisi client 2026-07-09) === --}}
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <x-line-chart title="Ammonia (rata-rata mingguan)" :points="$chartAir['ammonia']" :threshold="0.1" unit="ppm" :decimals="3" />
+            <x-line-chart title="TAN (rata-rata mingguan)" :points="$chartAir['tan']" :threshold="2" unit="ppm" :decimals="2" />
+            <x-line-chart title="Kepadatan Vibrio Hijau (rata-rata)" :points="$chartAir['vibrioHijau']" unit="koloni" :decimals="1" />
+            <x-line-chart title="Rasio Vibrio/Bakteri (rata-rata)" :points="$chartAir['vibrio']" :threshold="10" threshold-label="10%" unit="%" :decimals="1" />
+        </div>
 
         {{-- === PERLU PERHATIAN + MENUJU PANEN === --}}
         <div class="grid lg:grid-cols-2 gap-4 items-start">

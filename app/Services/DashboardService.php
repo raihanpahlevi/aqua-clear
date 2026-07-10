@@ -395,31 +395,51 @@ class DashboardService
         $weeklyRows = $weekliesByStocking->flatten(1);
         $chartAir = [
             'ammonia' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $w->ammonia !== null ? (float) $w->ammonia : null),
+            'tan' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $w->tan !== null ? (float) $w->tan : null),
+            'vibrioHijau' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $w->vibrio_hijau !== null ? (float) $w->vibrio_hijau : null),
             'vibrio' => $this->weeklySeries($weeklyRows, fn (WaterQualityWeekly $w) => $this->waterQualityService->vibrioRatioPercent($w)),
         ];
 
-        // === Grafik pertumbuhan (MBW/ADG/SR) — hanya saat filter satu kolam aktif ===
-        $chartTumbuh = null;
-        if ($pondId && $activeTiles->count() === 1) {
-            $t = $activeTiles->first();
+        // === Grafik pertumbuhan MBW/ADG/SR per sampling — SELALU tampil (revisi client
+        // 2026-07-09). Tanpa filter = rata-rata lintas kolam terfilter per tanggal
+        // sampling; saat difilter 1 kolam otomatis jadi nilai kolam itu sendiri. ===
+        $jumlahTebarByStocking = $stockings->pluck('jumlah_tebar', 'id');
+        $mbwRaw = [];
+        $srRaw = [];
+        $adgRaw = [];
+        foreach ($activeTiles as $t) {
             $urut = $samplingsByStocking->get($t['stocking']->id, collect())->sortBy('tgl')->values();
-            if ($urut->count() >= 2) {
-                $mbwPts = [];
-                $srPts = [];
-                $adgPts = [];
-                $prev = null;
-                foreach ($urut as $s) {
-                    $label = $s->tgl->format('d/m');
-                    $mbwPts[] = ['label' => $label, 'value' => (float) $s->mbw];
-                    $srPts[] = ['label' => $label, 'value' => $this->growthService->survivalRate($s->populasi, $t['stocking']->jumlah_tebar)];
-                    if ($prev) {
-                        $hari = $prev->tgl->diffInDays($s->tgl);
-                        $adgPts[] = ['label' => $label, 'value' => $this->growthService->adg((float) $s->mbw, (float) $prev->mbw, $hari)];
-                    }
-                    $prev = $s;
+            $prev = null;
+            foreach ($urut as $s) {
+                $key = $s->tgl->format('Y-m-d');
+                $mbwRaw[$key][] = (float) $s->mbw;
+                $srRaw[$key][] = $this->growthService->survivalRate($s->populasi, (int) $jumlahTebarByStocking[$s->stocking_id]);
+                if ($prev) {
+                    $adgRaw[$key][] = $this->growthService->adg((float) $s->mbw, (float) $prev->mbw, $prev->tgl->diffInDays($s->tgl));
                 }
-                $chartTumbuh = ['mbw' => $mbwPts, 'sr' => $srPts, 'adg' => $adgPts, 'kolam' => $t['pond']->kode_kolam];
+                $prev = $s;
             }
+        }
+
+        $rataPerTanggal = function (array $raw): array {
+            ksort($raw);
+            $pts = array_map(
+                fn (string $tgl, array $vals) => ['label' => Carbon::parse($tgl)->format('d/m'), 'value' => round(array_sum($vals) / count($vals), 3)],
+                array_keys($raw),
+                $raw,
+            );
+
+            return array_slice($pts, -12);
+        };
+
+        $chartTumbuh = null;
+        if (count($mbwRaw) >= 2) {
+            $chartTumbuh = [
+                'mbw' => $rataPerTanggal($mbwRaw),
+                'sr' => $rataPerTanggal($srRaw),
+                'adg' => $rataPerTanggal($adgRaw),
+                'kolam' => ($pondId && $activeTiles->count() === 1) ? $activeTiles->first()['pond']->kode_kolam : null,
+            ];
         }
 
         // 1 query — daftar siklus buat dropdown filter
